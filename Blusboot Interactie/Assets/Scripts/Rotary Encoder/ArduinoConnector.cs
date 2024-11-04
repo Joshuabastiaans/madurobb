@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.IO.Ports;
 using System.Threading;
@@ -13,8 +14,9 @@ public class ArduinoConnector : MonoBehaviour
     private ConcurrentQueue<string> dataQueue = new ConcurrentQueue<string>();
     private bool isRunning = false;
 
-    private long encoderPosition = 0;   // Stores the latest encoder position
-    private bool switchPressed = false; // Indicates if the switch was pressed
+    // Events to notify other scripts
+    public event Action<int> OnRotationChanged; // int value can be +1 or -1
+    public event Action OnSwitchPressed;
 
     void Start()
     {
@@ -30,7 +32,7 @@ public class ArduinoConnector : MonoBehaviour
             serialThread = new Thread(ReadSerial);
             serialThread.Start();
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError("Error opening serial port: " + e.Message);
         }
@@ -45,11 +47,11 @@ public class ArduinoConnector : MonoBehaviour
                 string data = serialPort.ReadLine();
                 dataQueue.Enqueue(data);
             }
-            catch (System.TimeoutException)
+            catch (TimeoutException)
             {
                 // Ignore timeout exceptions and continue reading
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError("Serial read error: " + ex.Message);
             }
@@ -63,43 +65,19 @@ public class ArduinoConnector : MonoBehaviour
             Debug.Log("Data Received: " + data);
 
             // Parse the incoming data
-            if (data.StartsWith("P"))
+            if (data == "+1")
             {
-                string positionString = data.Substring(1).Trim();
-                if (long.TryParse(positionString, out long position))
-                {
-                    // Update the encoder position
-                    encoderPosition = position;
-                }
+                // Notify subscribers of rotation change
+                OnRotationChanged?.Invoke(1);
             }
-            else if (data.StartsWith("S"))
+            else if (data == "-1")
             {
-                // Set the flag to change color
-                switchPressed = true;
+                OnRotationChanged?.Invoke(-1);
             }
-        }
-
-        // Apply rotation based on the encoder position
-        float degreesPerStep = 1.0f; // Adjust this scaling factor as needed
-        float rotationAngle = (encoderPosition * degreesPerStep) % 360f; // Wraps around at 360 degrees
-
-        transform.rotation = Quaternion.Euler(0, rotationAngle, 0);
-
-        // Change color if the switch was pressed
-        if (switchPressed)
-        {
-            switchPressed = false; // Reset the flag
-
-            // Get the Renderer component
-            Renderer renderer = GetComponent<Renderer>();
-            if (renderer != null)
+            else if (data == "S")
             {
-                // Assign a random color
-                renderer.material.color = new Color(Random.value, Random.value, Random.value);
-            }
-            else
-            {
-                Debug.LogWarning("Renderer component not found on the game object.");
+                // Notify subscribers of switch press
+                OnSwitchPressed?.Invoke();
             }
         }
     }
