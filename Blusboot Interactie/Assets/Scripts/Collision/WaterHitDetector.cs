@@ -5,15 +5,20 @@ public class WaterHitDetector : MonoBehaviour
 {
     private ParticleSystem waterSpray;
     private List<ParticleCollisionEvent> collisionEvents;
+    private FireController fireController;
 
     void Start()
     {
         collisionEvents = new List<ParticleCollisionEvent>();
+        fireController = GetComponent<FireController>();
+        if (fireController == null)
+        {
+            Debug.LogError("WaterHitDetector: No FireController found on the object.");
+        }
     }
 
     void OnParticleCollision(GameObject other)
     {
-        // Check if the colliding particles are from the WaterSpray
         if (other.CompareTag("WaterSpray"))
         {
             if (waterSpray == null)
@@ -23,13 +28,12 @@ public class WaterHitDetector : MonoBehaviour
 
             int numCollisionEvents = waterSpray.GetCollisionEvents(gameObject, collisionEvents);
 
-            for (int i = 0; i < numCollisionEvents; i++)
+            if (fireController != null)
             {
-                // Access collision details
-                Vector3 collisionPoint = collisionEvents[i].intersection;
-                Debug.Log("Water hit at position: " + collisionPoint);
-
-                // Implement your logic here, e.g., apply damage, extinguish fire, etc.
+                // Use the number of collision events as the amount of water hitting the object
+                float extinguishAmount = numCollisionEvents;
+                // Pass the extinguish amount to the FireController
+                fireController.Extinguish(extinguishAmount);
             }
         }
     }

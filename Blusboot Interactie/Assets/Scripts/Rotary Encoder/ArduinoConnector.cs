@@ -62,8 +62,6 @@ public class ArduinoConnector : MonoBehaviour
     {
         while (dataQueue.TryDequeue(out string data))
         {
-            Debug.Log("Data Received: " + data);
-
             // Parse the incoming data
             if (data == "+1")
             {
