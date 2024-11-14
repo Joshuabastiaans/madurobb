@@ -13,6 +13,8 @@ public class SprayController : MonoBehaviour
     private float minSprayAngle;          // Minimum angle
     private float maxSprayAngle;          // Maximum angle
     public float rotationRange = 45f;     // Range of rotation
+    // target axis
+    public float targetAxis = 0f;
 
     void Awake()
     {
@@ -59,7 +61,7 @@ public class SprayController : MonoBehaviour
             newYRotation = Mathf.Clamp(newYRotation, minSprayAngle, maxSprayAngle);
 
             // Apply rotation to the spray's transform around the Y axis
-            sprayTransform.localRotation = Quaternion.Euler(0, 0, newYRotation);
+            sprayTransform.localRotation = Quaternion.Euler(0, newYRotation, 0);
         }
     }
 

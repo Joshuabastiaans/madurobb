@@ -128,6 +128,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 16411877}
+  - component: {fileID: 16411878}
   m_Layer: 0
   m_Name: ---FIRE EMITTERS---
   m_TagString: Untagged
@@ -150,6 +151,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &16411878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16411876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b26185e4166954498c90bbee10bd63e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fireController1: {fileID: 700797827}
+  fireController2: {fileID: 516474749}
+  fireController3: {fileID: 1466530560}
 --- !u!1001 &214876081
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -540,6 +556,28 @@ Transform:
   - {fileID: 6918000421247052575}
   m_Father: {fileID: 543450653709974842}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &516474749 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6095618672238287523, guid: d87abd646aedbdb43a995c722a9c6e2f, type: 3}
+  m_PrefabInstance: {fileID: 1153015513180951460}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80482c476578b7442aed1ec4c366ccb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &700797827 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6095618672238287523, guid: d87abd646aedbdb43a995c722a9c6e2f, type: 3}
+  m_PrefabInstance: {fileID: 1720657950}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80482c476578b7442aed1ec4c366ccb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &723849550
 GameObject:
   m_ObjectHideFlags: 0
@@ -882,7 +920,7 @@ ParticleSystem:
     startSpeed:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 5
+      scalar: 2.99
       minScalar: 5
       maxCurve:
         serializedVersion: 2
@@ -5515,6 +5553,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1466530560 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6095618672238287523, guid: d87abd646aedbdb43a995c722a9c6e2f, type: 3}
+  m_PrefabInstance: {fileID: 214876081}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80482c476578b7442aed1ec4c366ccb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1720657950
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5578,6 +5627,18 @@ PrefabInstance:
     - target: {fileID: 3054049835361795007, guid: d87abd646aedbdb43a995c722a9c6e2f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6095618672238287523, guid: d87abd646aedbdb43a995c722a9c6e2f, type: 3}
+      propertyPath: fireColorGradient.key0.b
+      value: 0.49448192
+      objectReference: {fileID: 0}
+    - target: {fileID: 6095618672238287523, guid: d87abd646aedbdb43a995c722a9c6e2f, type: 3}
+      propertyPath: fireColorGradient.key0.g
+      value: 0.28572983
+      objectReference: {fileID: 0}
+    - target: {fileID: 6095618672238287523, guid: d87abd646aedbdb43a995c722a9c6e2f, type: 3}
+      propertyPath: fireColorGradient.key0.r
+      value: 0.122608274
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
