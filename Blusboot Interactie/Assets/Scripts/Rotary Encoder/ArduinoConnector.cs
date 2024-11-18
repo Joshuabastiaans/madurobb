@@ -15,8 +15,10 @@ public class ArduinoConnector : MonoBehaviour
     private bool isRunning = false;
 
     // Events to notify other scripts
-    public event Action<int> OnRotationChanged; // int value can be +1 or -1
+    public event Action<int> OnRotationChanged;   // int value can be +1 or -1
     public event Action OnSwitchPressed;
+    public event Action<int> OnPotentiometer1Changed;
+    public event Action<int> OnPotentiometer2Changed;
 
     void Start()
     {
@@ -62,10 +64,11 @@ public class ArduinoConnector : MonoBehaviour
     {
         while (dataQueue.TryDequeue(out string data))
         {
+            // Debug.Log("Data Received: " + data);
+
             // Parse the incoming data
             if (data == "+1")
             {
-                // Notify subscribers of rotation change
                 OnRotationChanged?.Invoke(1);
             }
             else if (data == "-1")
@@ -74,8 +77,27 @@ public class ArduinoConnector : MonoBehaviour
             }
             else if (data == "S")
             {
-                // Notify subscribers of switch press
                 OnSwitchPressed?.Invoke();
+            }
+            else if (data.StartsWith("P1:"))
+            {
+                string valueString = data.Substring(3).Trim();
+                if (int.TryParse(valueString, out int potValue1))
+                {
+                    OnPotentiometer1Changed?.Invoke(potValue1);
+                }
+            }
+            else if (data.StartsWith("P2:"))
+            {
+                string valueString = data.Substring(3).Trim();
+                if (int.TryParse(valueString, out int potValue2))
+                {
+                    OnPotentiometer2Changed?.Invoke(potValue2);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Unknown data received: " + data);
             }
         }
     }
