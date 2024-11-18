@@ -55,8 +55,8 @@ public class SprayController : MonoBehaviour
         {
             // Calculate the new Y rotation
             float newYRotation = initialYRotation + rotationValue * rotationStep;
-            print("y rotation: " + newYRotation);
-            print("rotation value: " + rotationValue);
+            // print("y rotation: " + newYRotation);
+            // print("rotation value: " + rotationValue);
             // Clamp the newYRotation within min and max angles
             newYRotation = Mathf.Clamp(newYRotation, minSprayAngle, maxSprayAngle);
 
