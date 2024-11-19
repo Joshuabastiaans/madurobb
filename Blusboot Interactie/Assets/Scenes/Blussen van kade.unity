@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 16411877}
   - component: {fileID: 16411878}
+  - component: {fileID: 16411879}
   m_Layer: 0
   m_Name: ---FIRE EMITTERS---
   m_TagString: Untagged
@@ -166,6 +167,26 @@ MonoBehaviour:
   fireController1: {fileID: 4925794024762544437}
   fireController2: {fileID: 1484088898}
   fireController3: {fileID: 18833071}
+--- !u!114 &16411879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16411876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7417182dc9f280b489a6b76be30f0f1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fireControllers:
+  - {fileID: 4925794024762544437}
+  - {fileID: 1484088898}
+  - {fileID: 18833071}
+  - {fileID: 3657868933287952021}
+  - {fileID: 3657868933287952020}
+  delayBetweenFires: 1
+  maxSpreadDistance: 5
 --- !u!114 &18833071 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5967777281505717266, guid: 9856e466e9f4abc47a56e7b5bd496930, type: 3}
@@ -5636,11 +5657,49 @@ PrefabInstance:
       propertyPath: m_Name
       value: brand boot raamen
       objectReference: {fileID: 0}
+    - target: {fileID: 7757860930673908139, guid: 9856e466e9f4abc47a56e7b5bd496930, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.0268
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757860930673908139, guid: 9856e466e9f4abc47a56e7b5bd496930, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.0382
+      objectReference: {fileID: 0}
+    - target: {fileID: 7757860930673908139, guid: 9856e466e9f4abc47a56e7b5bd496930, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.0157
+      objectReference: {fileID: 0}
+    - target: {fileID: 7791765934709351798, guid: 9856e466e9f4abc47a56e7b5bd496930, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.038
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9856e466e9f4abc47a56e7b5bd496930, type: 3}
+--- !u!114 &3657868933287952020 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2855791157101903707, guid: 9856e466e9f4abc47a56e7b5bd496930, type: 3}
+  m_PrefabInstance: {fileID: 3657868933287952019}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80482c476578b7442aed1ec4c366ccb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &3657868933287952021 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1377099837103975868, guid: 9856e466e9f4abc47a56e7b5bd496930, type: 3}
+  m_PrefabInstance: {fileID: 3657868933287952019}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80482c476578b7442aed1ec4c366ccb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &3940221449774288609
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -8,6 +8,8 @@ public class FireController : MonoBehaviour
 
     [Header("Extinguishing Settings")]
     public float extinguishMultiplier = 1f;   // Adjusts how quickly the fire extinguishes
+    public float extinguishEmissionRate = 100f;  // Particle emission rate when extinguishing
+    public float normalEmissionRate = 10f;    // Normal particle emission rate
     public Gradient fireColorGradient;        // Gradient from extinguished to full fire
 
     private float fireIntensity;              // Current fire intensity
@@ -74,10 +76,14 @@ public class FireController : MonoBehaviour
 
     void UpdateFireIntensity()
     {
+        // Store the current state of being extinguished
+        bool wasBeingExtinguished = isBeingExtinguished;
+
         if (isBeingExtinguished)
         {
             // Reduce fire intensity based on the accumulated extinguish amount
             fireIntensity -= extinguishAccumulator * extinguishMultiplier * Time.deltaTime;
+
             extinguishAccumulator = 0f;     // Reset accumulator after applying
             isBeingExtinguished = false;    // Reset the flag for the next frame
         }
@@ -90,15 +96,43 @@ public class FireController : MonoBehaviour
         // Clamp fire intensity between 0 and maxFireIntensity
         fireIntensity = Mathf.Clamp(fireIntensity, 0f, maxFireIntensity);
 
-        if (fireIntensity <= 0)
+        if (fireIntensity <= 0f)
         {
             isExtinguished = true;
+
             // Stop fire particles when extinguished
             if (fireParticles != null)
             {
                 var emission = fireParticles.emission;
                 emission.enabled = false;
                 fireParticles.Stop();
+            }
+        }
+        else
+        {
+            isExtinguished = false;  // Fire is not extinguished
+
+            if (fireParticles != null)
+            {
+                var emission = fireParticles.emission;
+
+                if (wasBeingExtinguished)
+                {
+                    // Increase particle emission rate when being extinguished
+                    emission.rateOverTime = extinguishEmissionRate;  // Set to higher emission rate
+                }
+                else
+                {
+                    // Set particle emission rate to normal
+                    emission.rateOverTime = normalEmissionRate;  // Set to normal emission rate
+                }
+
+                // Ensure emission is enabled
+                if (!emission.enabled)
+                {
+                    emission.enabled = true;
+                    fireParticles.Play();
+                }
             }
         }
     }
