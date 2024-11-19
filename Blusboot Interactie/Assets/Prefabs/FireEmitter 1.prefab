@@ -139,6 +139,8 @@ MonoBehaviour:
   maxFireIntensity: 100
   rekindleRate: 5
   extinguishMultiplier: 15
+  extinguishEmissionRate: 500
+  normalEmissionRate: 10
   fireColorGradient:
     serializedVersion: 2
     key0: {r: 0.122608274, g: 0.28572983, b: 0.49448192, a: 1}
