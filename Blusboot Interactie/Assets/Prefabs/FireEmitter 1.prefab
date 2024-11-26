@@ -68,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 5561349426305759274, guid: f269caf3fa1c02643811bb7c406b168a, type: 3}
+  - {fileID: 2100000, guid: cafdf62e1959e3941948dce9b3e31502, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -139,6 +139,8 @@ MonoBehaviour:
   maxFireIntensity: 100
   rekindleRate: 5
   extinguishMultiplier: 15
+  extinguishEmissionRate: 100
+  normalEmissionRate: 10
   fireColorGradient:
     serializedVersion: 2
     key0: {r: 0.122608274, g: 0.28572983, b: 0.49448192, a: 1}
