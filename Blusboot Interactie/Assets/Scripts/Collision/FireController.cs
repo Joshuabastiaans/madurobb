@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class FireController : MonoBehaviour
@@ -15,6 +16,7 @@ public class FireController : MonoBehaviour
     private float fireIntensity;              // Current fire intensity
     private Renderer objectRenderer;          // Renderer to change object color
     private bool isBeingExtinguished = false;
+    private bool isBeingExtinguishedDelayed = false;
     private bool isExtinguished = true;       // Fire starts as extinguished
     private bool isFireActive = false;        // Indicates whether the fire is active
     private float extinguishAccumulator = 0f; // Accumulates extinguish amount per frame
@@ -76,14 +78,10 @@ public class FireController : MonoBehaviour
 
     void UpdateFireIntensity()
     {
-        // Store the current state of being extinguished
-        bool wasBeingExtinguished = isBeingExtinguished;
-
         if (isBeingExtinguished)
         {
             // Reduce fire intensity based on the accumulated extinguish amount
             fireIntensity -= extinguishAccumulator * extinguishMultiplier * Time.deltaTime;
-
             extinguishAccumulator = 0f;     // Reset accumulator after applying
             isBeingExtinguished = false;    // Reset the flag for the next frame
         }
@@ -96,10 +94,9 @@ public class FireController : MonoBehaviour
         // Clamp fire intensity between 0 and maxFireIntensity
         fireIntensity = Mathf.Clamp(fireIntensity, 0f, maxFireIntensity);
 
-        if (fireIntensity <= 0f)
+        if (fireIntensity <= 0)
         {
             isExtinguished = true;
-
             // Stop fire particles when extinguished
             if (fireParticles != null)
             {
@@ -108,35 +105,7 @@ public class FireController : MonoBehaviour
                 fireParticles.Stop();
             }
         }
-        else
-        {
-            isExtinguished = false;  // Fire is not extinguished
-
-            if (fireParticles != null)
-            {
-                var emission = fireParticles.emission;
-
-                if (wasBeingExtinguished)
-                {
-                    // Increase particle emission rate when being extinguished
-                    emission.rateOverTime = extinguishEmissionRate;  // Set to higher emission rate
-                }
-                else
-                {
-                    // Set particle emission rate to normal
-                    emission.rateOverTime = normalEmissionRate;  // Set to normal emission rate
-                }
-
-                // Ensure emission is enabled
-                if (!emission.enabled)
-                {
-                    emission.enabled = true;
-                    fireParticles.Play();
-                }
-            }
-        }
     }
-
     void UpdateFireVisuals()
     {
         if (objectRenderer != null)
@@ -155,6 +124,10 @@ public class FireController : MonoBehaviour
         {
             var emission = fireParticles.emission;
             emission.rateOverTime = fireIntensity / 10;
+            if (isBeingExtinguishedDelayed)
+            {
+                emission.rateOverTime = extinguishEmissionRate;
+            }
             if (!fireParticles.isPlaying && fireIntensity > 0)
             {
                 fireParticles.Play();
@@ -169,8 +142,21 @@ public class FireController : MonoBehaviour
         {
             return;
         }
+
         isBeingExtinguished = true;
         extinguishAccumulator += amount;
+        if (!isBeingExtinguishedDelayed)
+        {
+            print("Extinguishing delayed");
+            isBeingExtinguishedDelayed = true;
+            StartCoroutine(setExtinguishedDelayed());
+        }
+    }
+
+    IEnumerator setExtinguishedDelayed()
+    {
+        yield return new WaitForSeconds(3f);
+        isBeingExtinguishedDelayed = false;
     }
 
     public void StartFire()

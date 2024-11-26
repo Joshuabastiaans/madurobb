@@ -6,7 +6,7 @@ public class PotentiometerObjectController : MonoBehaviour
 
     private int potentiometerValue1 = 0; // Range: 0 to 1023
     private int potentiometerValue2 = 0; // Range: 0 to 1023
-
+    public WaveManager waveManager;
     public Transform targetObject; // Assign the object to control in the Inspector
 
     void Awake()
@@ -39,6 +39,7 @@ public class PotentiometerObjectController : MonoBehaviour
     {
         if (targetObject != null)
         {
+            waveManager.RegisterPlayerActivity();
             // Map potentiometer values to rotation angles (0 to 270 degrees)
             float rotationAngleY = MapValue(potentiometerValue1, 0, 1023, 135f, -135f);
             float rotationAngleX = MapValue(potentiometerValue2, 0, 1023, 135f, -135f);
