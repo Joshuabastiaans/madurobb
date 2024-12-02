@@ -9,27 +9,26 @@ public class FireWaveController : MonoBehaviour
     public float delayBetweenFires = 1f;
     public float maxSpreadDistance = 5f;
 
-    [Header("Audio Settings")]
-    public AudioClip sirenSoundClip;    // Assign your siren sound effect here
-    private AudioSource sirenAudioSource;  // AudioSource to play the siren sound
+    private AudioManager audioManager;
+
 
     void Start()
     {
-        // Initialize the AudioSource for the siren sound
-        sirenAudioSource = gameObject.AddComponent<AudioSource>();
-        sirenAudioSource.clip = sirenSoundClip;
-        sirenAudioSource.loop = false;
-        sirenAudioSource.playOnAwake = false;
-        sirenAudioSource.volume = 1f;  // Adjust volume as needed
+        // Get reference to the AudioManager in the scene
+        audioManager = FindFirstObjectByType<AudioManager>();
+        if (audioManager == null)
+        {
+            Debug.LogError("FireWaveController: AudioManager not found in the scene.");
+        }
     }
 
-    [ContextMenu("Start Fire Wave")]
     public void StartFireWave()
     {
-        // Play the siren sound
-        if (sirenAudioSource != null && sirenSoundClip != null)
+        // Play the siren sound using the AudioManager
+        if (audioManager != null)
         {
-            sirenAudioSource.Play();
+            audioManager.PlayVoiceLine(audioManager.waveStartClip);
+            Debug.Log("Playing wave start sound");
         }
 
         StartCoroutine(FireWaveRoutine());

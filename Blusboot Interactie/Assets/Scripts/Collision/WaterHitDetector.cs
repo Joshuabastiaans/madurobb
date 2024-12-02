@@ -33,7 +33,7 @@ public class WaterHitDetector : MonoBehaviour
                 // Use the number of collision events as the amount of water hitting the object
                 float extinguishAmount = numCollisionEvents;
                 // Pass the extinguish amount to the FireController
-                fireController.Extinguish(extinguishAmount);
+                fireController.Extinguish(extinguishAmount, 1);
             }
         }
     }

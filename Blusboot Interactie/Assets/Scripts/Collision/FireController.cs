@@ -9,19 +9,25 @@ public class FireController : MonoBehaviour
 
     [Header("Extinguishing Settings")]
     public float extinguishMultiplier = 1f;   // Adjusts how quickly the fire extinguishes
-    public float extinguishEmissionRate = 100f;  // Particle emission rate when extinguishing
-    public float normalEmissionRate = 10f;    // Normal particle emission rate
+    public float extinguishEmissionMultiplier = 3f;  // Particle emission rate when extinguishing
+    public float normalEmissionMultiplier = 1f;    // Normal particle emission rate
     public Gradient fireColorGradient;        // Gradient from extinguished to full fire
 
     private float fireIntensity;              // Current fire intensity
     private Renderer objectRenderer;          // Renderer to change object color
     private bool isBeingExtinguished = false;
     private bool isBeingExtinguishedDelayed = false;
-    private bool isExtinguished = true;       // Fire starts as extinguished
+    public bool isExtinguished = true;        // Fire starts as extinguished
     private bool isFireActive = false;        // Indicates whether the fire is active
     private float extinguishAccumulator = 0f; // Accumulates extinguish amount per frame
     private ParticleSystem fireParticles;
+    private ParticleSystem smokeParticles;
     private MaterialPropertyBlock propBlock;
+
+    public delegate void FireExtinguishedHandler(FireController fireController, int playerId);
+    public event FireExtinguishedHandler OnFireExtinguished;
+
+    private int lastExtinguishingPlayerId = -1; // -1 indicates no player
 
     void Start()
     {
@@ -104,6 +110,12 @@ public class FireController : MonoBehaviour
                 emission.enabled = false;
                 fireParticles.Stop();
             }
+
+            // Notify that the fire is extinguished
+            if (OnFireExtinguished != null)
+            {
+                OnFireExtinguished(this, lastExtinguishingPlayerId);
+            }
         }
     }
     void UpdateFireVisuals()
@@ -126,7 +138,7 @@ public class FireController : MonoBehaviour
             emission.rateOverTime = fireIntensity / 10;
             if (isBeingExtinguishedDelayed)
             {
-                emission.rateOverTime = extinguishEmissionRate;
+                emission.rateOverTime = extinguishEmissionMultiplier;
             }
             if (!fireParticles.isPlaying && fireIntensity > 0)
             {
@@ -136,7 +148,7 @@ public class FireController : MonoBehaviour
         }
     }
 
-    public void Extinguish(float amount)
+    public void Extinguish(float amount, int playerId)
     {
         if (isExtinguished)
         {
@@ -145,10 +157,12 @@ public class FireController : MonoBehaviour
 
         isBeingExtinguished = true;
         extinguishAccumulator += amount;
+        lastExtinguishingPlayerId = playerId;
+
         if (!isBeingExtinguishedDelayed)
         {
-            print("Extinguishing delayed");
             isBeingExtinguishedDelayed = true;
+            StopAllCoroutines();
             StartCoroutine(setExtinguishedDelayed());
         }
     }
@@ -175,5 +189,10 @@ public class FireController : MonoBehaviour
 
         // Update visuals immediately
         UpdateFireVisuals();
+    }
+
+    public bool IsExtinguished()
+    {
+        return isExtinguished;
     }
 }

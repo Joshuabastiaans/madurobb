@@ -1,64 +1,91 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerSkillManager : MonoBehaviour
 {
     public enum SkillLevel { Beginner, Intermediate, Advanced }
-    public SkillLevel currentSkillLevel = SkillLevel.Beginner;
 
-    [Header("Skill Thresholds")]
-    public float intermediateThreshold = 60f; // Time in seconds to reach intermediate level
-    public float advancedThreshold = 30f;     // Time in seconds to reach advanced level
+    [System.Serializable]
+    public class PlayerData
+    {
+        public int playerId;
+        public string playerName;
+        public SkillLevel skillLevel = SkillLevel.Beginner;
+        public float totalTimeTaken = 0f;
+        public int totalFiresExtinguished = 0;
 
-    private float totalTimeTaken = 0f;
-    private int totalFiresExtinguished = 0;
+        // Wave-specific data
+        public float waveStartTime = 0f;
+        public float waveEndTime = 0f;
+        public float waveTimeTaken = 0f;
+    }
 
-    private bool isTracking = false;
+    public List<PlayerData> players = new List<PlayerData>();
 
     void Start()
     {
-        // Start tracking when the game begins
-        StartTracking();
+        // Initialize players (assuming two players)
+        players.Add(new PlayerData { playerId = 1, playerName = "Player 1" });
+        players.Add(new PlayerData { playerId = 2, playerName = "Player 2" });
     }
 
-    void Update()
+    public void StartWave()
     {
-        if (isTracking)
+        foreach (var player in players)
         {
-            totalTimeTaken += Time.deltaTime;
+            player.waveStartTime = Time.time;
+            player.waveEndTime = 0f;
+            player.waveTimeTaken = 0f;
+            player.totalFiresExtinguished = 0; // Reset for new wave
         }
     }
 
-    public void StartTracking()
+    public void FireExtinguished(int playerId)
     {
-        isTracking = true;
-        totalTimeTaken = 0f;
-        totalFiresExtinguished = 0;
-    }
-
-    public void StopTracking()
-    {
-        isTracking = false;
-        DetermineSkillLevel();
-    }
-
-    public void FireExtinguished()
-    {
-        totalFiresExtinguished++;
-    }
-
-    private void DetermineSkillLevel()
-    {
-        if (totalTimeTaken <= advancedThreshold)
+        PlayerData player = players.Find(p => p.playerId == playerId);
+        if (player != null)
         {
-            currentSkillLevel = SkillLevel.Advanced;
+            player.totalFiresExtinguished++;
+
+            // If it's the first fire they extinguished in this wave, record wave end time
+            if (player.waveEndTime == 0f)
+            {
+                player.waveEndTime = Time.time;
+                player.waveTimeTaken = player.waveEndTime - player.waveStartTime;
+                player.totalTimeTaken += player.waveTimeTaken;
+
+                // Determine skill level based on wave time
+                DetermineSkillLevel(player);
+            }
         }
-        else if (totalTimeTaken <= intermediateThreshold)
+    }
+
+    private void DetermineSkillLevel(PlayerData player)
+    {
+        if (player.waveTimeTaken <= 10f) // Adjust thresholds as needed
         {
-            currentSkillLevel = SkillLevel.Intermediate;
+            player.skillLevel = SkillLevel.Advanced;
+        }
+        else if (player.waveTimeTaken <= 20f)
+        {
+            player.skillLevel = SkillLevel.Intermediate;
         }
         else
         {
-            currentSkillLevel = SkillLevel.Beginner;
+            player.skillLevel = SkillLevel.Beginner;
         }
+    }
+
+    public List<PlayerData> GetActivePlayers()
+    {
+        List<PlayerData> activePlayers = new List<PlayerData>();
+        foreach (var player in players)
+        {
+            if (player.totalFiresExtinguished > 0)
+            {
+                activePlayers.Add(player);
+            }
+        }
+        return activePlayers;
     }
 }
