@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class FireController : MonoBehaviour
@@ -13,27 +14,42 @@ public class FireController : MonoBehaviour
     public float normalEmissionMultiplier = 1f;    // Normal particle emission rate
     public Gradient fireColorGradient;        // Gradient from extinguished to full fire
 
+    public List<FireController> neighboringFirePoints; // Neighbors for fire spreading
+    public float fireSpreadDelay = 1f; // Delay before fire spreads to neighbors
+
     private float fireIntensity;              // Current fire intensity
     private Renderer objectRenderer;          // Renderer to change object color
     private bool isBeingExtinguished = false;
     private bool isBeingExtinguishedDelayed = false;
     public bool isExtinguished = true;        // Fire starts as extinguished
-    private bool isFireActive = false;        // Indicates whether the fire is active
+    public bool isFireActive = false;         // Indicates whether the fire is active
     private float extinguishAccumulator = 0f; // Accumulates extinguish amount per frame
-    private ParticleSystem fireParticles;
-    private ParticleSystem smokeParticles;
     private MaterialPropertyBlock propBlock;
-
+    private PlayerSkillManager playerSkillManager;
     public delegate void FireExtinguishedHandler(FireController fireController, int playerId);
     public event FireExtinguishedHandler OnFireExtinguished;
 
     private int lastExtinguishingPlayerId = -1; // -1 indicates no player
 
+    // Class to hold particle system and its original emission rate
+    private class ParticleSystemInfo
+    {
+        public ParticleSystem particleSystem;
+        public float originalEmissionRate;
+
+        public ParticleSystemInfo(ParticleSystem ps)
+        {
+            particleSystem = ps;
+            originalEmissionRate = ps.emission.rateOverTime.constant;
+        }
+    }
+
+    private List<ParticleSystemInfo> particleSystemInfos = new List<ParticleSystemInfo>();
+
     void Start()
     {
         fireIntensity = 0f;
         propBlock = new MaterialPropertyBlock();
-        fireParticles = GetComponentInChildren<ParticleSystem>();
         objectRenderer = GetComponent<Renderer>();
 
         if (objectRenderer == null)
@@ -58,13 +74,20 @@ public class FireController : MonoBehaviour
             );
         }
 
-        // Stop and disable fire particles at start
-        if (fireParticles != null)
+        // Get all particle systems under this object
+        ParticleSystem[] particleSystems = GetComponentsInChildren<ParticleSystem>();
+
+        foreach (var ps in particleSystems)
         {
-            var emission = fireParticles.emission;
+            var emission = ps.emission;
             emission.enabled = false;
-            fireParticles.Stop();
+            ps.Stop();
+
+            var psi = new ParticleSystemInfo(ps);
+            particleSystemInfos.Add(psi);
         }
+
+        playerSkillManager = FindAnyObjectByType<PlayerSkillManager>();
 
         // Set the initial color to the extinguished color
         UpdateFireVisuals();
@@ -87,7 +110,10 @@ public class FireController : MonoBehaviour
         if (isBeingExtinguished)
         {
             // Reduce fire intensity based on the accumulated extinguish amount
-            fireIntensity -= extinguishAccumulator * extinguishMultiplier * Time.deltaTime;
+            float reduction = extinguishAccumulator * extinguishMultiplier * Time.deltaTime;
+            reduction = Mathf.Min(reduction, fireIntensity); // Prevent over-reduction
+            fireIntensity -= reduction;
+
             extinguishAccumulator = 0f;     // Reset accumulator after applying
             isBeingExtinguished = false;    // Reset the flag for the next frame
         }
@@ -104,12 +130,14 @@ public class FireController : MonoBehaviour
         {
             isExtinguished = true;
             // Stop fire particles when extinguished
-            if (fireParticles != null)
+            foreach (var psi in particleSystemInfos)
             {
-                var emission = fireParticles.emission;
+                var emission = psi.particleSystem.emission;
                 emission.enabled = false;
-                fireParticles.Stop();
+                psi.particleSystem.Stop();
             }
+
+            isFireActive = false;
 
             // Notify that the fire is extinguished
             if (OnFireExtinguished != null)
@@ -118,6 +146,7 @@ public class FireController : MonoBehaviour
             }
         }
     }
+
     void UpdateFireVisuals()
     {
         if (objectRenderer != null)
@@ -132,17 +161,23 @@ public class FireController : MonoBehaviour
             objectRenderer.SetPropertyBlock(propBlock);
         }
 
-        if (fireParticles != null)
+        foreach (var psi in particleSystemInfos)
         {
-            var emission = fireParticles.emission;
-            emission.rateOverTime = fireIntensity / 10;
+            var emission = psi.particleSystem.emission;
+
+            // Calculate emission rate based on assigned emission value
+            float emissionRate = psi.originalEmissionRate * (fireIntensity / maxFireIntensity);
+
             if (isBeingExtinguishedDelayed)
             {
-                emission.rateOverTime = extinguishEmissionMultiplier;
+                emissionRate *= extinguishEmissionMultiplier;
             }
-            if (!fireParticles.isPlaying && fireIntensity > 0)
+
+            emission.rateOverTime = emissionRate;
+
+            if (!psi.particleSystem.isPlaying && fireIntensity > 0)
             {
-                fireParticles.Play();
+                psi.particleSystem.Play();
                 emission.enabled = true;
             }
         }
@@ -158,6 +193,9 @@ public class FireController : MonoBehaviour
         isBeingExtinguished = true;
         extinguishAccumulator += amount;
         lastExtinguishingPlayerId = playerId;
+
+        if (playerSkillManager != null)
+            playerSkillManager.Extinguish(amount, playerId);
 
         if (!isBeingExtinguishedDelayed)
         {
@@ -175,20 +213,56 @@ public class FireController : MonoBehaviour
 
     public void StartFire()
     {
+        if (isFireActive)
+            return;
+
+        Debug.Log("Fire is started at " + gameObject.name);
         isFireActive = true;
         isExtinguished = false;
         fireIntensity = maxFireIntensity;
 
+        // Reset extinguishing state
+        extinguishAccumulator = 0f;
+        isBeingExtinguished = false;
+        isBeingExtinguishedDelayed = false;
+        StopAllCoroutines();
+
         // Start fire particles
-        if (fireParticles != null)
+        foreach (var psi in particleSystemInfos)
         {
-            var emission = fireParticles.emission;
+            var emission = psi.particleSystem.emission;
             emission.enabled = true;
-            fireParticles.Play();
+            psi.particleSystem.Play();
         }
 
         // Update visuals immediately
         UpdateFireVisuals();
+
+        // Start spreading coroutine
+        HashSet<FireController> visitedFires = new HashSet<FireController>();
+        visitedFires.Add(this);
+        StartCoroutine(SpreadFire(visitedFires));
+    }
+
+    public void SetFireSpreadDelay(float delay)
+    {
+        fireSpreadDelay = delay;
+    }
+
+    private IEnumerator SpreadFire(HashSet<FireController> visitedFires)
+    {
+        yield return new WaitForSeconds(fireSpreadDelay);
+
+        foreach (FireController neighbor in neighboringFirePoints)
+        {
+            if (!neighbor.isFireActive && !visitedFires.Contains(neighbor))
+            {
+                visitedFires.Add(neighbor);
+                neighbor.SetFireSpreadDelay(fireSpreadDelay);
+                neighbor.StartFire();
+                yield return StartCoroutine(neighbor.SpreadFire(visitedFires));
+            }
+        }
     }
 
     public bool IsExtinguished()

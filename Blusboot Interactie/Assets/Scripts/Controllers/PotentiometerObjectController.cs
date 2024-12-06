@@ -42,7 +42,7 @@ public class PotentiometerObjectController : MonoBehaviour
             waveManager.RegisterPlayerActivity();
             // Map potentiometer values to rotation angles (0 to 270 degrees)
             float rotationAngleY = MapValue(potentiometerValue1, 0, 1023, 135f, -135f);
-            float rotationAngleX = MapValue(potentiometerValue2, 0, 1023, 135f, -135f);
+            float rotationAngleX = MapValue(potentiometerValue2, 0, 1023, 70f, -70f);
 
             // Apply rotations around X and Y axes
             targetObject.localRotation = Quaternion.Euler(rotationAngleX, rotationAngleY, 0f);

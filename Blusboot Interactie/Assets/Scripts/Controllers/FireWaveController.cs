@@ -10,6 +10,7 @@ public class FireWaveController : MonoBehaviour
     public float maxSpreadDistance = 5f;
 
     private AudioManager audioManager;
+    WaveManager waveManager;
 
 
     void Start()
@@ -20,18 +21,13 @@ public class FireWaveController : MonoBehaviour
         {
             Debug.LogError("FireWaveController: AudioManager not found in the scene.");
         }
+        waveManager = FindFirstObjectByType<WaveManager>();
     }
 
     public void StartFireWave()
     {
-        // Play the siren sound using the AudioManager
-        if (audioManager != null)
-        {
-            audioManager.PlayVoiceLine(audioManager.waveStartClip);
-            Debug.Log("Playing wave start sound");
-        }
+        waveManager.StartFireWave();
 
-        StartCoroutine(FireWaveRoutine());
     }
 
     private IEnumerator FireWaveRoutine()
