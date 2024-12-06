@@ -74,7 +74,7 @@ public class WaveManager : MonoBehaviour
         if (activePlayers.Count == 0)
         {
             Debug.LogWarning("No active players. No fires will be started.");
-            StopExperience();
+            // StopExperience();
             return playerFireAssignments;
         }
 

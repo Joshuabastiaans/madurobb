@@ -196,6 +196,7 @@ public class FireController : MonoBehaviour
 
         if (playerSkillManager != null)
             playerSkillManager.Extinguish(amount, playerId);
+        print("Player " + playerId + " extinguished " + amount + " damage.");
 
         if (!isBeingExtinguishedDelayed)
         {
