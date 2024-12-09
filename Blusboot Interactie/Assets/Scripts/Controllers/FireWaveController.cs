@@ -11,7 +11,7 @@ public class FireWaveController : MonoBehaviour
 
     private AudioManager audioManager;
     WaveManager waveManager;
-
+    TurnOnWater turnOnWater;
 
     void Start()
     {
@@ -22,11 +22,13 @@ public class FireWaveController : MonoBehaviour
             Debug.LogError("FireWaveController: AudioManager not found in the scene.");
         }
         waveManager = FindFirstObjectByType<WaveManager>();
+        turnOnWater = FindFirstObjectByType<TurnOnWater>();
     }
 
     public void StartFireWave()
     {
         waveManager.StartFireWave();
+        turnOnWater.TurnOn();
 
     }
 

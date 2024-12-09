@@ -242,7 +242,6 @@ public class FireController : MonoBehaviour
         // Start spreading coroutine
         HashSet<FireController> visitedFires = new HashSet<FireController>();
         visitedFires.Add(this);
-        StartCoroutine(SpreadFire(visitedFires));
     }
 
     public void SetFireSpreadDelay(float delay)
@@ -250,21 +249,6 @@ public class FireController : MonoBehaviour
         fireSpreadDelay = delay;
     }
 
-    private IEnumerator SpreadFire(HashSet<FireController> visitedFires)
-    {
-        yield return new WaitForSeconds(fireSpreadDelay);
-
-        foreach (FireController neighbor in neighboringFirePoints)
-        {
-            if (!neighbor.isFireActive && !visitedFires.Contains(neighbor))
-            {
-                visitedFires.Add(neighbor);
-                neighbor.SetFireSpreadDelay(fireSpreadDelay);
-                neighbor.StartFire();
-                yield return StartCoroutine(neighbor.SpreadFire(visitedFires));
-            }
-        }
-    }
 
     public bool IsExtinguished()
     {

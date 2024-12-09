@@ -18,7 +18,7 @@ public class WaveManager : MonoBehaviour
     private float inactivityTimer = 0f; // Timer to track player inactivity
     public float inactivityTimeout = 60f; // Time in seconds before stopping the experience
     private bool isExperienceActive = true; // Indicates whether the experience is active
-
+    TurnOnWater turnOnWater;
     void Start()
     {
         // Get references to AudioManager and PlayerSkillManager
@@ -29,6 +29,7 @@ public class WaveManager : MonoBehaviour
         playerSkillManager = FindAnyObjectByType<PlayerSkillManager>();
         if (playerSkillManager == null)
             Debug.LogError("WaveManager: PlayerSkillManager not found in the scene.");
+        turnOnWater = FindAnyObjectByType<TurnOnWater>();
     }
 
     public void StartFireWave()
@@ -50,18 +51,18 @@ public class WaveManager : MonoBehaviour
             // Select fire points for the wave
             Dictionary<PlayerSkillManager.PlayerData, List<FireController>> playerFireAssignments = SelectFirePointsForWave(wave);
 
-            // Start fires with spread time
-            Debug.Log("Selected fire points for wave " + wave.waveName);
+            Debug.Log("Selected fire points for wave " + wave.waveName + "for this many points: " + playerFireAssignments.Count);
             yield return StartCoroutine(StartFiresWithSpreadTime(playerFireAssignments));
 
             // Wait for all fires to be extinguished
-            yield return StartCoroutine(WaitForWaveToComplete());
+            yield return StartCoroutine(WaitForWaveToComplete(playerFireAssignments));
 
             playerSkillManager.EndWave();
 
             // Wait for wave interval before starting the next wave
             yield return new WaitForSeconds(wave.waveInterval);
         }
+        turnOnWater.TurnOff();
         Debug.Log("All waves completed");
     }
 
@@ -190,12 +191,11 @@ public class WaveManager : MonoBehaviour
     {
         foreach (var kvp in playerFireAssignments)
         {
+            print(kvp.Value.Count);
             PlayerSkillManager.PlayerData player = kvp.Key;
-            List<FireController> fireControllers = kvp.Value;
-
             float spreadTime = GetFireSpreadTime(player.skillLevel);
 
-            foreach (FireController fireController in fireControllers)
+            foreach (FireController fireController in kvp.Value)
             {
                 fireController.SetFireSpreadDelay(spreadTime);
                 fireController.StartFire();
@@ -204,7 +204,6 @@ public class WaveManager : MonoBehaviour
             }
         }
     }
-
     private float GetFireSpreadTime(PlayerSkillManager.SkillLevel skillLevel)
     {
         switch (skillLevel)
@@ -220,19 +219,23 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    private IEnumerator WaitForWaveToComplete()
+    private IEnumerator WaitForWaveToComplete(Dictionary<PlayerSkillManager.PlayerData, List<FireController>> playerFireAssignments)
     {
         bool waveCompleted = false;
         while (!waveCompleted)
         {
             waveCompleted = true;
-            foreach (FireController fireController in allFirePoints)
+            foreach (var kvp in playerFireAssignments)
             {
-                if (fireController != null && fireController.isFireActive && !fireController.IsExtinguished())
+                foreach (FireController fireController in kvp.Value)
                 {
-                    waveCompleted = false;
-                    break;
+                    if (fireController != null && fireController.isFireActive && !fireController.IsExtinguished())
+                    {
+                        waveCompleted = false;
+                        break;
+                    }
                 }
+                if (!waveCompleted) break;
             }
             yield return null;
         }

@@ -2947,6 +2947,7 @@ GameObject:
   - component: {fileID: 1788003966}
   - component: {fileID: 1788003968}
   - component: {fileID: 1788003967}
+  - component: {fileID: 1788003969}
   m_Layer: 0
   m_Name: WaterSpray
   m_TagString: WaterSpray
@@ -7769,6 +7770,19 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
+--- !u!114 &1788003969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1788003965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c4cbb14e2d962c439fa70d4194b32db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isTurnedOnAtStart: 0
 --- !u!1 &1884731511
 GameObject:
   m_ObjectHideFlags: 0
@@ -8332,7 +8346,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: isExtinguished
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: extinguishMultiplier
@@ -8551,7 +8565,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: isExtinguished
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: extinguishMultiplier
@@ -8664,7 +8678,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: isExtinguished
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: extinguishMultiplier
@@ -8757,7 +8771,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: isExtinguished
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: extinguishMultiplier
@@ -8842,7 +8856,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: isExtinguished
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5211116560865110413, guid: e0705d8ca9a39ca4d9169bd499e32876, type: 3}
       propertyPath: extinguishMultiplier
