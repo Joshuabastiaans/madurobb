@@ -2448,11 +2448,11 @@ MonoBehaviour:
   - waveName: Starter
     maxFireCount: 1
     fireSpreadTime: 0
-    waveInterval: 3
+    waveInterval: 1
   - waveName: Wave 1
     maxFireCount: 4
     fireSpreadTime: 1
-    waveInterval: 3
+    waveInterval: 1
   - waveName: Wave 2
     maxFireCount: 5
     fireSpreadTime: 1
