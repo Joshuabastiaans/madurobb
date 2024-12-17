@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class FireController : MonoBehaviour
@@ -28,6 +29,12 @@ public class FireController : MonoBehaviour
     private PlayerSkillManager playerSkillManager;
     public delegate void FireExtinguishedHandler(FireController fireController, int playerId);
     public event FireExtinguishedHandler OnFireExtinguished;
+
+    public AudioClip extinguishFireSound;
+    public AudioClip extinguishSound;
+    public AudioSource extinguishFireAudioSource;
+    public AudioSource extinguishAudioSource;
+
 
     private int lastExtinguishingPlayerId = -1; // -1 indicates no player
 
@@ -139,6 +146,12 @@ public class FireController : MonoBehaviour
 
             isFireActive = false;
 
+            // Play the final extinguish sound if not null
+            if (extinguishAudioSource != null && extinguishSound != null)
+            {
+                extinguishAudioSource.PlayOneShot(extinguishSound);
+            }
+
             // Notify that the fire is extinguished
             if (OnFireExtinguished != null)
             {
@@ -194,9 +207,14 @@ public class FireController : MonoBehaviour
         extinguishAccumulator += amount;
         lastExtinguishingPlayerId = playerId;
 
-        if (playerSkillManager != null)
-            playerSkillManager.Extinguish(amount, playerId);
-        print("Player " + playerId + " extinguished " + amount + " damage.");
+        if (extinguishFireAudioSource != null && extinguishFireSound != null && !extinguishFireAudioSource.isPlaying)
+        {
+            extinguishFireAudioSource.clip = extinguishFireSound;
+            extinguishFireAudioSource.loop = true; // Loop if you want continuous sound as long as extinguishing
+            extinguishFireAudioSource.Play();
+        }
+
+        playerSkillManager?.Extinguish(amount, playerId);
 
         if (!isBeingExtinguishedDelayed)
         {
@@ -205,6 +223,7 @@ public class FireController : MonoBehaviour
             StartCoroutine(setExtinguishedDelayed());
         }
     }
+
 
     IEnumerator setExtinguishedDelayed()
     {
@@ -253,5 +272,15 @@ public class FireController : MonoBehaviour
     public bool IsExtinguished()
     {
         return isExtinguished;
+    }
+
+    public float GetMaxHealth()
+    {
+        return maxFireIntensity;
+    }
+
+    public float GetCurrentHealth()
+    {
+        return fireIntensity;
     }
 }

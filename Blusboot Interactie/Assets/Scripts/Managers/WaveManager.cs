@@ -8,20 +8,28 @@ public class WaveManager : MonoBehaviour
     public List<Wave> waves = new List<Wave>();
 
     [Header("Fire Points")]
-    public List<FireController> allFirePoints; // List of all fire points, ordered from left to right
+    public List<FireController> allFirePoints; // List of all fire points
 
     private int currentWaveIndex = 0;
     private AudioManager audioManager;
     private PlayerSkillManager playerSkillManager;
 
-    private bool isPlayerActive = false; // Indicates whether the player is active
-    private float inactivityTimer = 0f; // Timer to track player inactivity
-    public float inactivityTimeout = 60f; // Time in seconds before stopping the experience
-    private bool isExperienceActive = true; // Indicates whether the experience is active
+    private bool isPlayerActive = false;
+    private float inactivityTimer = 0f;
+    public float inactivityTimeout = 60f;
+    private bool isExperienceActive = true;
+    private bool isWaveActive = false;
+
+    // Progression Tracking
+    private List<FireController> activeWaveFires = new List<FireController>(); // Fires in the current wave
+    private float maxHealthPerFirePoint = 100f; // Assumed fire point health
+    public float waveProgression { get; private set; } = 0f; // Public progression value (0 to 1)
     TurnOnWater turnOnWater;
+
+    private AudioManager.Emotion currentEmotion = AudioManager.Emotion.Neutral; // "None" is a placeholder if not defined, could use null checks or a default state.
     void Start()
     {
-        // Get references to AudioManager and PlayerSkillManager
+        turnOnWater = FindAnyObjectByType<TurnOnWater>();
         audioManager = FindAnyObjectByType<AudioManager>();
         if (audioManager == null)
             Debug.LogError("WaveManager: AudioManager not found in the scene.");
@@ -29,43 +37,71 @@ public class WaveManager : MonoBehaviour
         playerSkillManager = FindAnyObjectByType<PlayerSkillManager>();
         if (playerSkillManager == null)
             Debug.LogError("WaveManager: PlayerSkillManager not found in the scene.");
-        turnOnWater = FindAnyObjectByType<TurnOnWater>();
     }
 
     public void StartFireWave()
     {
         StartCoroutine(WaveRoutine());
+        audioManager.StartWaveAudio();
     }
 
     private IEnumerator WaveRoutine()
     {
         for (currentWaveIndex = 0; currentWaveIndex < waves.Count; currentWaveIndex++)
         {
+            isWaveActive = true;
             Wave wave = waves[currentWaveIndex];
             playerSkillManager.StartWave();
+            activeWaveFires.Clear(); // Reset fire tracking
 
-            // Play wave start sound
-            if (audioManager != null && audioManager.waveStartClip != null)
-                audioManager.PlayVoiceLine(audioManager.waveStartClip);
-
-            // Select fire points for the wave
             Dictionary<PlayerSkillManager.PlayerData, List<FireController>> playerFireAssignments = SelectFirePointsForWave(wave);
-
-            Debug.Log("Selected fire points for wave " + wave.waveName + "for this many points: " + playerFireAssignments.Count);
             yield return StartCoroutine(StartFiresWithSpreadTime(playerFireAssignments));
 
-            // Wait for all fires to be extinguished
-            yield return StartCoroutine(WaitForWaveToComplete(playerFireAssignments));
+            // Track active fires for this wave
+            foreach (var kvp in playerFireAssignments)
+            {
+                activeWaveFires.AddRange(kvp.Value);
+            }
+
+            // Wait for fires to be extinguished while updating progression
+            yield return StartCoroutine(TrackWaveProgression());
 
             playerSkillManager.EndWave();
-
-            // Wait for wave interval before starting the next wave
             yield return new WaitForSeconds(wave.waveInterval);
         }
-        turnOnWater.TurnOff();
+        isWaveActive = false;
+        audioManager.EndWaveAudio(1f);
         Debug.Log("All waves completed");
     }
 
+    private IEnumerator TrackWaveProgression()
+    {
+        while (true)
+        {
+            float totalRemainingHealth = 0f;
+
+            // Calculate remaining health of all fires in the wave
+            foreach (FireController fire in activeWaveFires)
+            {
+                if (fire != null && fire.isFireActive)
+                {
+                    totalRemainingHealth += fire.GetCurrentHealth();
+                }
+            }
+
+            // Calculate progression
+            float totalPossibleHealth = activeWaveFires.Count * maxHealthPerFirePoint;
+            waveProgression = 1f - (totalRemainingHealth / totalPossibleHealth);
+
+            // Debug log progression
+            Debug.Log($"Wave Progression: {waveProgression:F2}");
+
+            // Break when all fires are extinguished
+            if (totalRemainingHealth <= 0f) break;
+
+            yield return null; // Wait for next frame
+        }
+    }
     private Dictionary<PlayerSkillManager.PlayerData, List<FireController>> SelectFirePointsForWave(Wave wave)
     {
         Dictionary<PlayerSkillManager.PlayerData, List<FireController>> playerFireAssignments = new Dictionary<PlayerSkillManager.PlayerData, List<FireController>>();
@@ -271,6 +307,36 @@ public class WaveManager : MonoBehaviour
         }
 
         isPlayerActive = false; // Reset activity flag each frame
+
+        // if wave progression is .5 or more then make positive souunds
+        // check if wave is active
+
+        if (waveProgression < 0.7f && currentEmotion != AudioManager.Emotion.Scared && isWaveActive)
+        {
+            audioManager.SetCrowdEmotion(AudioManager.Emotion.Scared, 1f);
+            currentEmotion = AudioManager.Emotion.Scared;
+        }
+        else if (waveProgression >= 0.7f && currentEmotion != AudioManager.Emotion.Positive && isWaveActive)
+        {
+            audioManager.SetCrowdEmotion(AudioManager.Emotion.Positive, 1f);
+            currentEmotion = AudioManager.Emotion.Positive;
+        }
+        if (!isWaveActive && currentEmotion != AudioManager.Emotion.Neutral)
+        {
+            audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
+            currentEmotion = AudioManager.Emotion.Neutral;
+        }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            StartFireWave();
+            turnOnWater.TurnOn();
+
+        }
+
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            StopExperience();
+        }
     }
 
     public void StopExperience()
