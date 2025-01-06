@@ -126,6 +126,11 @@ public class AudioManager : MonoBehaviour
         StartCoroutine(FadeCrowdEmotion(newEmotion, fadeTime));
     }
 
+    public void SetVolume(float volume)
+    {
+        crowdVolume = volume;
+    }
+
     private IEnumerator FadeCrowdEmotion(Emotion newEmotion, float fadeTime)
     {
         // Fade out current

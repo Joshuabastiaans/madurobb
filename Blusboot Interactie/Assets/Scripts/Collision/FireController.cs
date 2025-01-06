@@ -35,8 +35,12 @@ public class FireController : MonoBehaviour
     public AudioSource extinguishFireAudioSource;
     public AudioSource extinguishAudioSource;
 
-
     private int lastExtinguishingPlayerId = -1; // -1 indicates no player
+    [Header("Fire Sprite")]
+    public GameObject fireSprite;
+    private float originalFireSpriteScale;
+    public bool isFollower = false;
+    private bool isFollowerActivated = false;
 
     // Class to hold particle system and its original emission rate
     private class ParticleSystemInfo
@@ -63,7 +67,11 @@ public class FireController : MonoBehaviour
         {
             Debug.LogError("FireController: No Renderer found on the object.");
         }
-
+        if (fireSprite != null)
+        {
+            fireSprite.SetActive(false);
+            originalFireSpriteScale = fireSprite.transform.localScale.x;
+        }
         // Ensure a gradient is assigned
         if (fireColorGradient == null)
         {
@@ -110,6 +118,17 @@ public class FireController : MonoBehaviour
             }
             UpdateFireVisuals();
         }
+        if (fireIntensity < maxFireIntensity / 2 && !isFollower && !isFollowerActivated && isFireActive)
+        {
+            isFollowerActivated = true;
+            foreach (var fire in neighboringFirePoints)
+            {
+                if (!fire.isFireActive)
+                {
+                    fire.StartFire();
+                }
+            }
+        }
     }
 
     void UpdateFireIntensity()
@@ -150,6 +169,7 @@ public class FireController : MonoBehaviour
             if (extinguishAudioSource != null && extinguishSound != null)
             {
                 extinguishAudioSource.PlayOneShot(extinguishSound);
+                print("Extinguished sound played");
             }
 
             // Notify that the fire is extinguished
@@ -194,6 +214,40 @@ public class FireController : MonoBehaviour
                 emission.enabled = true;
             }
         }
+        UpdateFireSpriteScale();
+    }
+    private void UpdateFireSpriteScale()
+    {
+        if (fireSprite == null) return;
+
+        // If there is no intensity, hide the sprite
+        if (fireIntensity <= 0)
+        {
+            fireSprite.SetActive(false);
+            return;
+        }
+        else if (!fireSprite.activeSelf && isFireActive)
+        {
+            fireSprite.SetActive(true);
+        }
+
+        float normalizedIntensity = fireIntensity / maxFireIntensity;
+
+        if (normalizedIntensity > 0.66f)
+        {
+            // High intensity -> 100%
+            fireSprite.transform.localScale = Vector3.one * originalFireSpriteScale;
+        }
+        else if (normalizedIntensity > 0.33f)
+        {
+            // Medium intensity -> 75%
+            fireSprite.transform.localScale = Vector3.one * 0.75f * originalFireSpriteScale;
+        }
+        else
+        {
+            // Low intensity -> 50%
+            fireSprite.transform.localScale = Vector3.one * 0.5f * originalFireSpriteScale;
+        }
     }
 
     public void Extinguish(float amount, int playerId)
@@ -210,7 +264,6 @@ public class FireController : MonoBehaviour
         if (extinguishFireAudioSource != null && extinguishFireSound != null && !extinguishFireAudioSource.isPlaying)
         {
             extinguishFireAudioSource.clip = extinguishFireSound;
-            extinguishFireAudioSource.loop = true; // Loop if you want continuous sound as long as extinguishing
             extinguishFireAudioSource.Play();
         }
 
@@ -240,7 +293,7 @@ public class FireController : MonoBehaviour
         isFireActive = true;
         isExtinguished = false;
         fireIntensity = maxFireIntensity;
-
+        isFollowerActivated = false;
         // Reset extinguishing state
         extinguishAccumulator = 0f;
         isBeingExtinguished = false;

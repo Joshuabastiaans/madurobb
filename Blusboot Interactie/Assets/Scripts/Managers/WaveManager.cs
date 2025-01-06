@@ -72,6 +72,18 @@ public class WaveManager : MonoBehaviour
         isWaveActive = false;
         audioManager.EndWaveAudio(1f);
         Debug.Log("All waves completed");
+        StartCoroutine(setCrowdPositive());
+        turnOnWater.TurnOff();
+
+    }
+
+    IEnumerator setCrowdPositive()
+    {
+        audioManager.SetVolume(0.5f);
+        audioManager.SetCrowdEmotion(AudioManager.Emotion.Positive, 1f);
+        yield return new WaitForSeconds(5);
+        audioManager.SetVolume(.2f);
+        audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
     }
 
     private IEnumerator TrackWaveProgression()
@@ -321,13 +333,14 @@ public class WaveManager : MonoBehaviour
             audioManager.SetCrowdEmotion(AudioManager.Emotion.Positive, 1f);
             currentEmotion = AudioManager.Emotion.Positive;
         }
-        if (!isWaveActive && currentEmotion != AudioManager.Emotion.Neutral)
-        {
-            audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
-            currentEmotion = AudioManager.Emotion.Neutral;
-        }
+        // if (!isWaveActive && currentEmotion != AudioManager.Emotion.Neutral)
+        // {
+        //     audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
+        //     currentEmotion = AudioManager.Emotion.Neutral;
+        // }
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            StopExperience();
             StartFireWave();
             turnOnWater.TurnOn();
 
@@ -344,8 +357,7 @@ public class WaveManager : MonoBehaviour
         // Stop all waves and reset
         StopAllCoroutines();
         currentWaveIndex = 0;
-        if (audioManager != null && audioManager.inactivityClip != null)
-            audioManager.PlayVoiceLine(audioManager.inactivityClip);
+        turnOnWater.TurnOff();
         Debug.Log("Experience stopped due to inactivity.");
     }
 
