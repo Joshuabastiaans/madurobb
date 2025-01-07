@@ -3840,24 +3840,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ebcdc64a8469fe45b723cca3980be1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  waves:
-  - waveName: Starter
-    maxFireCount: 1
-    fireSpreadTime: 0
-    waveInterval: 1
-  - waveName: Wave 1
-    maxFireCount: 3
-    fireSpreadTime: 1
-    waveInterval: 1
-  - waveName: Wave 2
-    maxFireCount: 4
-    fireSpreadTime: 1
-    waveInterval: 0
-  allFirePoints:
+  audioManager: {fileID: 317337384}
+  playerSkillManager: {fileID: 789484465}
+  turnOnWater: {fileID: 1788003969}
+  largeFirePoints:
   - {fileID: 3657868933287952020}
   - {fileID: 3657868933287952021}
   - {fileID: 85509578}
   - {fileID: 18833071}
+  smallFirePoints:
+  - {fileID: 989912437}
+  - {fileID: 1556978695}
+  - {fileID: 1965638789}
+  - {fileID: 1484088898}
   inactivityTimeout: 30
 --- !u!1 &1628771681
 GameObject:
@@ -4579,7 +4574,7 @@ ParticleSystemRenderer:
   m_SortingOrder: 0
   m_RenderMode: 0
   m_MeshDistribution: 0
-  m_SortMode: 0
+  m_SortMode: 2
   m_MinParticleSize: 0
   m_MaxParticleSize: 0.5
   m_CameraVelocityScale: 0
@@ -4588,7 +4583,7 @@ ParticleSystemRenderer:
   m_SortingFudge: 0
   m_NormalDirection: 1
   m_ShadowBias: 0
-  m_RenderAlignment: 0
+  m_RenderAlignment: 3
   m_Pivot: {x: 0, y: 0, z: 0}
   m_Flip: {x: 0, y: 0, z: 0}
   m_EnableGPUInstancing: 1

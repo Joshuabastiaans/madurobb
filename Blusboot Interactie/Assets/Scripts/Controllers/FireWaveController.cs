@@ -27,7 +27,7 @@ public class FireWaveController : MonoBehaviour
 
     public void StartFireWave()
     {
-        waveManager.StartFireWave();
+        // waveManager.StartFireWave();
         turnOnWater.TurnOn();
 
     }

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class PlayerSkillManager : MonoBehaviour
 {
@@ -26,40 +25,46 @@ public class PlayerSkillManager : MonoBehaviour
 
     void Start()
     {
-        // Initialize players (assuming two players)
+        // Example initialization for two players
         players.Add(new PlayerData { playerId = 1, playerName = "Player 1" });
         players.Add(new PlayerData { playerId = 2, playerName = "Player 2" });
     }
 
     public void StartWave()
     {
+        // Reset wave-specific timers and extinguished damage
         foreach (var player in players)
         {
             player.waveStartTime = Time.time;
             player.waveEndTime = 0f;
             player.waveTimeTaken = 0f;
-            player.totalExtinguishedDamage = 0; // Reset for new wave
+            player.totalExtinguishedDamage = 0;
         }
     }
+
     public void Extinguish(float amount, int playerId)
     {
+        // Increase extinguished damage for the relevant player
         PlayerData player = players.Find(p => p.playerId == playerId);
         if (player != null)
         {
             player.totalExtinguishedDamage += (int)amount;
         }
-
     }
+
     public void FireExtinguished(int playerId)
     {
+        // Currently unused in this simplified flow, but you can add logic if you want
         PlayerData player = players.Find(p => p.playerId == playerId);
         if (player != null)
         {
+            // e.g., increment a counter if needed
         }
     }
 
     public void EndWave()
     {
+        // Stop the wave timer and compute skill
         foreach (var player in players)
         {
             if (player.waveEndTime == 0f)
@@ -68,18 +73,23 @@ public class PlayerSkillManager : MonoBehaviour
                 player.waveTimeTaken = player.waveEndTime - player.waveStartTime;
                 player.totalTimeTaken += player.waveTimeTaken;
             }
-
             DetermineSkillLevel(player);
-            print(player.playerName + " is a " + player.skillLevel + " firefighter!");
+            Debug.Log(player.playerName + " is a " + player.skillLevel + " firefighter!");
         }
     }
 
     private void DetermineSkillLevel(PlayerData player)
     {
-        // Calculate efficiency score (damage per second)
-        float efficiencyScore = player.totalExtinguishedDamage / player.waveTimeTaken;
+        // Example efficiency: “Damage extinguished per second”
+        float efficiencyScore = 0f;
+        if (player.waveTimeTaken > 0f)
+            efficiencyScore = player.totalExtinguishedDamage / player.waveTimeTaken;
 
-        print(player.playerName + " took " + player.waveTimeTaken + " seconds for the wave while extinguishing " + player.totalExtinguishedDamage + " damage. Efficiency score: " + efficiencyScore);
+        Debug.Log(player.playerName + " took " + player.waveTimeTaken +
+                  "s for this wave, extinguished " + player.totalExtinguishedDamage +
+                  " damage. Efficiency: " + efficiencyScore);
+
+        // Example threshold checks
         if (player.totalExtinguishedDamage >= 10)
         {
             player.isPlayerActive = true;
@@ -88,8 +98,9 @@ public class PlayerSkillManager : MonoBehaviour
         {
             player.isPlayerActive = false;
         }
-        // Set thresholds based on efficiency score
-        if (efficiencyScore >= 100f) // Adjust thresholds as needed
+
+        // Adjust thresholds to match your difficulty
+        if (efficiencyScore >= 100f)
         {
             player.skillLevel = SkillLevel.Advanced;
         }
@@ -105,9 +116,12 @@ public class PlayerSkillManager : MonoBehaviour
 
     public List<PlayerData> GetActivePlayers()
     {
+        // Return currently active players (in this example, we return all)
+        // Or filter out players who are inactive if desired
         List<PlayerData> activePlayers = new List<PlayerData>();
         foreach (var player in players)
         {
+            // If you want to only return those with isPlayerActive == true, do so here
             activePlayers.Add(player);
         }
         return activePlayers;

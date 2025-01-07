@@ -125,7 +125,7 @@ public class FireController : MonoBehaviour
             {
                 if (!fire.isFireActive)
                 {
-                    fire.StartFire();
+                    // fire.StartFire();
                 }
             }
         }
@@ -315,7 +315,14 @@ public class FireController : MonoBehaviour
         HashSet<FireController> visitedFires = new HashSet<FireController>();
         visitedFires.Add(this);
     }
+    public void StopFireImmediately()
+    {
+        isFireActive = false;
+        isExtinguished = true;
+        fireIntensity = 0;
+        UpdateFireVisuals();
 
+    }
     public void SetFireSpreadDelay(float delay)
     {
         fireSpreadDelay = delay;

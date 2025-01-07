@@ -4,306 +4,45 @@ using UnityEngine;
 
 public class WaveManager : MonoBehaviour
 {
-    [Header("Wave Settings")]
-    public List<Wave> waves = new List<Wave>();
+    [Header("References")]
+    public AudioManager audioManager;
+    public PlayerSkillManager playerSkillManager;
+    public TurnOnWater turnOnWater;
 
-    [Header("Fire Points")]
-    public List<FireController> allFirePoints; // List of all fire points
+    [Header("Large and Small Fire Points")]
+    public List<FireController> largeFirePoints; // The major/large fires
+    public List<FireController> smallFirePoints; // The smaller fires
 
-    private int currentWaveIndex = 0;
-    private AudioManager audioManager;
-    private PlayerSkillManager playerSkillManager;
-
+    [Header("Inactivity Settings")]
+    public float inactivityTimeout = 60f;
     private bool isPlayerActive = false;
     private float inactivityTimer = 0f;
-    public float inactivityTimeout = 60f;
     private bool isExperienceActive = true;
-    private bool isWaveActive = false;
 
-    // Progression Tracking
-    private List<FireController> activeWaveFires = new List<FireController>(); // Fires in the current wave
-    private float maxHealthPerFirePoint = 100f; // Assumed fire point health
-    public float waveProgression { get; private set; } = 0f; // Public progression value (0 to 1)
-    TurnOnWater turnOnWater;
+    // Crowd emotion tracking
+    private AudioManager.Emotion currentEmotion = AudioManager.Emotion.Neutral;
 
-    private AudioManager.Emotion currentEmotion = AudioManager.Emotion.Neutral; // "None" is a placeholder if not defined, could use null checks or a default state.
-    void Start()
+    // Used to ensure we only run the main sequence once
+    private bool sequenceStarted = false;
+
+    private void Start()
     {
-        turnOnWater = FindAnyObjectByType<TurnOnWater>();
-        audioManager = FindAnyObjectByType<AudioManager>();
+        // Make sure references are found if not assigned in Inspector
+        if (!audioManager) audioManager = FindAnyObjectByType<AudioManager>();
+        if (!playerSkillManager) playerSkillManager = FindAnyObjectByType<PlayerSkillManager>();
+        if (!turnOnWater) turnOnWater = FindAnyObjectByType<TurnOnWater>();
+
         if (audioManager == null)
             Debug.LogError("WaveManager: AudioManager not found in the scene.");
-
-        playerSkillManager = FindAnyObjectByType<PlayerSkillManager>();
         if (playerSkillManager == null)
             Debug.LogError("WaveManager: PlayerSkillManager not found in the scene.");
+        if (turnOnWater == null)
+            Debug.LogError("WaveManager: TurnOnWater not found in the scene.");
     }
 
-    public void StartFireWave()
+    private void Update()
     {
-        StartCoroutine(WaveRoutine());
-        audioManager.StartWaveAudio();
-    }
-
-    private IEnumerator WaveRoutine()
-    {
-        for (currentWaveIndex = 0; currentWaveIndex < waves.Count; currentWaveIndex++)
-        {
-            isWaveActive = true;
-            Wave wave = waves[currentWaveIndex];
-            playerSkillManager.StartWave();
-            activeWaveFires.Clear(); // Reset fire tracking
-
-            Dictionary<PlayerSkillManager.PlayerData, List<FireController>> playerFireAssignments = SelectFirePointsForWave(wave);
-            yield return StartCoroutine(StartFiresWithSpreadTime(playerFireAssignments));
-
-            // Track active fires for this wave
-            foreach (var kvp in playerFireAssignments)
-            {
-                activeWaveFires.AddRange(kvp.Value);
-            }
-
-            // Wait for fires to be extinguished while updating progression
-            yield return StartCoroutine(TrackWaveProgression());
-
-            playerSkillManager.EndWave();
-            yield return new WaitForSeconds(wave.waveInterval);
-        }
-        isWaveActive = false;
-        audioManager.EndWaveAudio(1f);
-        Debug.Log("All waves completed");
-        StartCoroutine(setCrowdPositive());
-        turnOnWater.TurnOff();
-
-    }
-
-    IEnumerator setCrowdPositive()
-    {
-        audioManager.SetVolume(0.5f);
-        audioManager.SetCrowdEmotion(AudioManager.Emotion.Positive, 1f);
-        yield return new WaitForSeconds(5);
-        audioManager.SetVolume(.2f);
-        audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
-    }
-
-    private IEnumerator TrackWaveProgression()
-    {
-        while (true)
-        {
-            float totalRemainingHealth = 0f;
-
-            // Calculate remaining health of all fires in the wave
-            foreach (FireController fire in activeWaveFires)
-            {
-                if (fire != null && fire.isFireActive)
-                {
-                    totalRemainingHealth += fire.GetCurrentHealth();
-                }
-            }
-
-            // Calculate progression
-            float totalPossibleHealth = activeWaveFires.Count * maxHealthPerFirePoint;
-            waveProgression = 1f - (totalRemainingHealth / totalPossibleHealth);
-
-            // Debug log progression
-            Debug.Log($"Wave Progression: {waveProgression:F2}");
-
-            // Break when all fires are extinguished
-            if (totalRemainingHealth <= 0f) break;
-
-            yield return null; // Wait for next frame
-        }
-    }
-    private Dictionary<PlayerSkillManager.PlayerData, List<FireController>> SelectFirePointsForWave(Wave wave)
-    {
-        Dictionary<PlayerSkillManager.PlayerData, List<FireController>> playerFireAssignments = new Dictionary<PlayerSkillManager.PlayerData, List<FireController>>();
-        List<PlayerSkillManager.PlayerData> activePlayers = playerSkillManager.GetActivePlayers();
-
-        // If no active players, do not start any fires
-        if (activePlayers.Count == 0)
-        {
-            Debug.LogWarning("No active players. No fires will be started.");
-            // StopExperience();
-            return playerFireAssignments;
-        }
-
-        int totalFirePoints = wave.maxFireCount;
-
-        // First wave starts in the middle
-        if (currentWaveIndex == 0)
-        {
-            int middleIndex = allFirePoints.Count / 2;
-            FireController middleFirePoint = allFirePoints[middleIndex];
-
-            foreach (var player in activePlayers)
-            {
-                playerFireAssignments[player] = new List<FireController> { middleFirePoint };
-                break; // Assign the middle fire point to the first active player
-            }
-        }
-        else
-        {
-            // Sort active players by skill level (better players first)
-            activePlayers.Sort((a, b) => b.skillLevel.CompareTo(a.skillLevel));
-
-            // Assign fires to players based on their skill level
-            int remainingFires = totalFirePoints;
-            List<FireController> selectedFirePoints = new List<FireController>();
-
-            foreach (var player in activePlayers)
-            {
-                // Determine the number of fires for this player based on skill level
-                int firesToAssign = GetFiresBasedOnSkillLevel(player.skillLevel, remainingFires);
-
-                // Get fire points close to the player
-                List<FireController> playerFirePoints = GetFirePointsForPlayer(player, firesToAssign, selectedFirePoints);
-
-                selectedFirePoints.AddRange(playerFirePoints);
-
-                playerFireAssignments[player] = playerFirePoints;
-
-                remainingFires -= playerFirePoints.Count;
-
-                if (remainingFires <= 0)
-                    break;
-            }
-        }
-
-        return playerFireAssignments;
-    }
-
-    private int GetFiresBasedOnSkillLevel(PlayerSkillManager.SkillLevel skillLevel, int maxFiresAvailable)
-    {
-        switch (skillLevel)
-        {
-            case PlayerSkillManager.SkillLevel.Advanced:
-                return Mathf.Min(3, maxFiresAvailable);
-            case PlayerSkillManager.SkillLevel.Intermediate:
-                return Mathf.Min(2, maxFiresAvailable);
-            case PlayerSkillManager.SkillLevel.Beginner:
-                return Mathf.Min(1, maxFiresAvailable);
-            default:
-                return Mathf.Min(1, maxFiresAvailable);
-        }
-    }
-
-    private List<FireController> GetFirePointsForPlayer(PlayerSkillManager.PlayerData player, int firesToAssign, List<FireController> selectedFirePoints)
-    {
-        List<FireController> firePoints = new List<FireController>();
-
-        // Get the range of fire points close to the player
-        List<FireController> playerFirePoints = GetFirePointsCloseToPlayer(player.playerId);
-
-        // Filter out fire points that are already selected
-        playerFirePoints.RemoveAll(fp => selectedFirePoints.Contains(fp));
-
-        // Shuffle the player's fire points to randomize selection
-        ShuffleList(playerFirePoints);
-
-        // Select the required number of fire points
-        for (int i = 0; i < firesToAssign && i < playerFirePoints.Count; i++)
-        {
-            firePoints.Add(playerFirePoints[i]);
-        }
-
-        Debug.Log("Assigned " + firePoints.Count + " fire points to Player " + player.playerId);
-
-        return firePoints;
-    }
-
-    private List<FireController> GetFirePointsCloseToPlayer(int playerId)
-    {
-        int totalPoints = allFirePoints.Count;
-        List<FireController> playerFirePoints = new List<FireController>();
-
-        if (playerId == 1)
-        {
-            // Player 1 is on the left
-            playerFirePoints = allFirePoints.GetRange(0, totalPoints / 2);
-        }
-        else if (playerId == 2)
-        {
-            // Player 2 is on the right
-            playerFirePoints = allFirePoints.GetRange(totalPoints / 2, totalPoints - (totalPoints / 2));
-        }
-        else
-        {
-            // For other players, adjust accordingly
-            Debug.LogWarning("Unknown playerId: " + playerId);
-        }
-
-        return playerFirePoints;
-    }
-
-    private IEnumerator StartFiresWithSpreadTime(Dictionary<PlayerSkillManager.PlayerData, List<FireController>> playerFireAssignments)
-    {
-        foreach (var kvp in playerFireAssignments)
-        {
-            print(kvp.Value.Count);
-            PlayerSkillManager.PlayerData player = kvp.Key;
-            float spreadTime = GetFireSpreadTime(player.skillLevel);
-
-            foreach (FireController fireController in kvp.Value)
-            {
-                fireController.SetFireSpreadDelay(spreadTime);
-                fireController.StartFire();
-                fireController.OnFireExtinguished += HandleFireExtinguished;
-                yield return new WaitForSeconds(spreadTime);
-            }
-        }
-    }
-    private float GetFireSpreadTime(PlayerSkillManager.SkillLevel skillLevel)
-    {
-        switch (skillLevel)
-        {
-            case PlayerSkillManager.SkillLevel.Advanced:
-                return 0.5f; // Faster spread
-            case PlayerSkillManager.SkillLevel.Intermediate:
-                return 1.0f;
-            case PlayerSkillManager.SkillLevel.Beginner:
-                return 1.5f; // Slower spread
-            default:
-                return 1.0f;
-        }
-    }
-
-    private IEnumerator WaitForWaveToComplete(Dictionary<PlayerSkillManager.PlayerData, List<FireController>> playerFireAssignments)
-    {
-        bool waveCompleted = false;
-        while (!waveCompleted)
-        {
-            waveCompleted = true;
-            foreach (var kvp in playerFireAssignments)
-            {
-                foreach (FireController fireController in kvp.Value)
-                {
-                    if (fireController != null && fireController.isFireActive && !fireController.IsExtinguished())
-                    {
-                        waveCompleted = false;
-                        break;
-                    }
-                }
-                if (!waveCompleted) break;
-            }
-            yield return null;
-        }
-    }
-
-    private void HandleFireExtinguished(FireController fireController, int playerId)
-    {
-        // Notify PlayerSkillManager
-        if (playerSkillManager != null)
-        {
-            playerSkillManager.FireExtinguished(playerId);
-        }
-
-        // Unsubscribe from the event
-        fireController.OnFireExtinguished -= HandleFireExtinguished;
-    }
-
-    void Update()
-    {
-        // Update inactivity timer
+        // --- Handle inactivity ---
         if (!isPlayerActive)
         {
             inactivityTimer += Time.deltaTime;
@@ -317,33 +56,14 @@ public class WaveManager : MonoBehaviour
         {
             inactivityTimer = 0f;
         }
+        isPlayerActive = false; // reset each frame
 
-        isPlayerActive = false; // Reset activity flag each frame
-
-        // if wave progression is .5 or more then make positive souunds
-        // check if wave is active
-
-        if (waveProgression < 0.7f && currentEmotion != AudioManager.Emotion.Scared && isWaveActive)
-        {
-            audioManager.SetCrowdEmotion(AudioManager.Emotion.Scared, 1f);
-            currentEmotion = AudioManager.Emotion.Scared;
-        }
-        else if (waveProgression >= 0.7f && currentEmotion != AudioManager.Emotion.Positive && isWaveActive)
-        {
-            audioManager.SetCrowdEmotion(AudioManager.Emotion.Positive, 1f);
-            currentEmotion = AudioManager.Emotion.Positive;
-        }
-        // if (!isWaveActive && currentEmotion != AudioManager.Emotion.Neutral)
-        // {
-        //     audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
-        //     currentEmotion = AudioManager.Emotion.Neutral;
-        // }
+        // --- Optional debug keys ---
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            StopExperience();
-            StartFireWave();
+            StopExperience();     // If you want to restart from scratch
+            StartFireSequence();  // Start the new logic
             turnOnWater.TurnOn();
-
         }
 
         if (Input.GetKeyDown(KeyCode.S))
@@ -352,20 +72,204 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    public void StopExperience()
-    {
-        // Stop all waves and reset
-        StopAllCoroutines();
-        currentWaveIndex = 0;
-        turnOnWater.TurnOff();
-        Debug.Log("Experience stopped due to inactivity.");
-    }
-
+    /// <summary>
+    /// Call this when a user input happens to reset inactivity timer.
+    /// </summary>
     public void RegisterPlayerActivity()
     {
         isPlayerActive = true;
     }
 
+    /// <summary>
+    /// The main logic: 
+    /// 1) Ignite middle large. 
+    /// 2) Wait until extinguished => Start skill tracking. 
+    /// 3) Ignite all other large fires. 
+    /// 4) Wait until only 1 large remains => End skill tracking. 
+    /// 5) Ignite small fires based on new skill levels.
+    /// </summary>
+    public void StartFireSequence()
+    {
+        if (!sequenceStarted)
+        {
+            sequenceStarted = true;
+            StartCoroutine(FireSequenceRoutine());
+            audioManager?.StartWaveAudio();
+        }
+        else
+        {
+            Debug.LogWarning("Fire sequence already started!");
+        }
+    }
+
+    private IEnumerator FireSequenceRoutine()
+    {
+        // --- Step 1: Ignite only 1 large fire in the middle ---
+        FireController middleFire = largeFirePoints[largeFirePoints.Count / 2];
+        middleFire.StartFire();
+        bool middleFireExtinguished = false;
+
+        // Subscribe to the extinguished event for the middle fire
+        middleFire.OnFireExtinguished += (fireController, playerId) =>
+        {
+            middleFireExtinguished = true;
+            // Unsubscribe to avoid memory leaks
+            middleFire.OnFireExtinguished -= (fireController, playerId2) => { };
+        };
+
+        Debug.Log("Middle large fire ignited. Waiting for extinguish...");
+
+        // Wait until the middle fire is extinguished
+        while (!middleFireExtinguished)
+        {
+            yield return null;
+        }
+
+        Debug.Log("Middle large fire extinguished!");
+
+        // --- Step 2: Start skill tracking (like a new wave) ---
+        playerSkillManager.StartWave();
+        Debug.Log("Now tracking skill (StartWave).");
+
+        // --- Step 3: Ignite all other large fires ---
+        foreach (var largeFire in largeFirePoints)
+        {
+            if (largeFire != middleFire)
+                largeFire.StartFire();
+        }
+        Debug.Log("All other large fires ignited.");
+
+        // --- Step 4: Wait until only 1 large fire remains active ---
+        while (CountActiveFires(largeFirePoints) > 1)
+        {
+            yield return null;
+        }
+
+        // Once down to 1 active large fire, let's evaluate skill
+        Debug.Log("Only 1 large fire remains. Evaluating skill...");
+        playerSkillManager.EndWave();
+
+        // --- Step 5: Ignite small fires based on skill ---
+        PlayerSkillManager.SkillLevel overallSkill = DetermineOverallSkill();
+        IgniteSmallFiresBasedOnSkill(overallSkill);
+
+        // --- Step 6: Wait until all fires are extinguished ---
+        while (CountActiveFires(largeFirePoints) > 0 || CountActiveFires(smallFirePoints) > 0)
+        {
+            yield return null;
+        }
+
+        Debug.Log("All fires extinguished.");
+        audioManager?.EndWaveAudio(1f);
+        StartCoroutine(SetCrowdPositive());
+        turnOnWater.TurnOff();
+    }
+
+    /// <summary>
+    /// Stop all coroutines and reset relevant flags/fires.
+    /// </summary>
+    public void StopExperience()
+    {
+        StopAllCoroutines();
+        sequenceStarted = false;
+
+        // Turn off water if desired
+        turnOnWater.TurnOff();
+
+        // Extinguish all fires
+        foreach (var largeFire in largeFirePoints)
+        {
+            if (largeFire.isFireActive)
+                largeFire.StopFireImmediately(); // or however you extinguish forcibly
+        }
+        foreach (var smallFire in smallFirePoints)
+        {
+            if (smallFire.isFireActive)
+                smallFire.StopFireImmediately();
+        }
+
+        Debug.Log("Experience stopped. Fires reset.");
+    }
+
+    /// <summary>
+    /// Count how many from the list are still active (not extinguished).
+    /// </summary>
+    private int CountActiveFires(List<FireController> fireList)
+    {
+        int activeCount = 0;
+        foreach (var f in fireList)
+        {
+            if (f != null && f.isFireActive)
+                activeCount++;
+        }
+        return activeCount;
+    }
+
+    /// <summary>
+    /// Determine an overall skill from the set of players (e.g. highest skill).
+    /// </summary>
+    private PlayerSkillManager.SkillLevel DetermineOverallSkill()
+    {
+        List<PlayerSkillManager.PlayerData> activePlayers = playerSkillManager.GetActivePlayers();
+        PlayerSkillManager.SkillLevel highest = PlayerSkillManager.SkillLevel.Beginner;
+
+        foreach (var p in activePlayers)
+        {
+            if (p.skillLevel > highest)
+            {
+                highest = p.skillLevel;
+            }
+        }
+
+        Debug.Log("Overall skill determined to be: " + highest);
+        return highest;
+    }
+
+    /// <summary>
+    /// Ignite smaller fire points based on skill.
+    /// </summary>
+    private void IgniteSmallFiresBasedOnSkill(PlayerSkillManager.SkillLevel skillLevel)
+    {
+        // Decide how many small fires to light
+        int countToIgnite = 0;
+        switch (skillLevel)
+        {
+            case PlayerSkillManager.SkillLevel.Advanced:
+                countToIgnite = smallFirePoints.Count; // 100%
+                break;
+            case PlayerSkillManager.SkillLevel.Intermediate:
+                countToIgnite = smallFirePoints.Count / 2; // 50%
+                break;
+            case PlayerSkillManager.SkillLevel.Beginner:
+            default:
+                countToIgnite = 0; // none
+                break;
+        }
+
+        // Shuffle the small list so we ignite random ones if partial
+        ShuffleList(smallFirePoints);
+
+        // Ignite the chosen number of small fires
+        for (int i = 0; i < countToIgnite; i++)
+        {
+            smallFirePoints[i].StartFire();
+        }
+
+        Debug.Log($"Ignited {countToIgnite} small fires for skill level {skillLevel}.");
+    }
+
+    private IEnumerator SetCrowdPositive()
+    {
+        audioManager.SetVolume(0.5f);
+        audioManager.SetCrowdEmotion(AudioManager.Emotion.Positive, 1f);
+        yield return new WaitForSeconds(5);
+        audioManager.SetVolume(0.2f);
+        audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
+    }
+
+    /// <summary>
+    /// Utility to shuffle a list in-place.
+    /// </summary>
     private void ShuffleList<T>(List<T> list)
     {
         for (int i = 0; i < list.Count; i++)
@@ -376,13 +280,4 @@ public class WaveManager : MonoBehaviour
             list[randomIndex] = temp;
         }
     }
-}
-
-[System.Serializable]
-public class Wave
-{
-    public string waveName;
-    public int maxFireCount;
-    public float fireSpreadTime;
-    public float waveInterval;
 }
