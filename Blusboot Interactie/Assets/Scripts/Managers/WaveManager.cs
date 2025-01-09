@@ -7,7 +7,8 @@ public class WaveManager : MonoBehaviour
     [Header("References")]
     public AudioManager audioManager;
     public PlayerSkillManager playerSkillManager;
-    public TurnOnWater turnOnWater;
+    public TurnOnWater turnOnWaterP1;
+    public TurnOnWater turnOnWaterP2;
 
     [Header("Large and Small Fire Points")]
     public List<FireController> largeFirePoints; // The major/large fires
@@ -30,14 +31,15 @@ public class WaveManager : MonoBehaviour
         // Make sure references are found if not assigned in Inspector
         if (!audioManager) audioManager = FindAnyObjectByType<AudioManager>();
         if (!playerSkillManager) playerSkillManager = FindAnyObjectByType<PlayerSkillManager>();
-        if (!turnOnWater) turnOnWater = FindAnyObjectByType<TurnOnWater>();
 
         if (audioManager == null)
             Debug.LogError("WaveManager: AudioManager not found in the scene.");
         if (playerSkillManager == null)
             Debug.LogError("WaveManager: PlayerSkillManager not found in the scene.");
-        if (turnOnWater == null)
+        if (turnOnWaterP1 == null)
             Debug.LogError("WaveManager: TurnOnWater not found in the scene.");
+        if (turnOnWaterP2 == null)
+            Debug.LogError("WaveManager: TurnOnWater2 not found in the scene.");
     }
 
     private void Update()
@@ -63,7 +65,8 @@ public class WaveManager : MonoBehaviour
         {
             StopExperience();     // If you want to restart from scratch
             StartFireSequence();  // Start the new logic
-            turnOnWater.TurnOn();
+            turnOnWaterP1.TurnOn();
+            turnOnWaterP2.TurnOn();
         }
 
         if (Input.GetKeyDown(KeyCode.S))
@@ -162,7 +165,8 @@ public class WaveManager : MonoBehaviour
         Debug.Log("All fires extinguished.");
         audioManager?.EndWaveAudio(1f);
         StartCoroutine(SetCrowdPositive());
-        turnOnWater.TurnOff();
+        turnOnWaterP1.TurnOff();
+        turnOnWaterP2.TurnOff();
     }
 
     /// <summary>
@@ -174,7 +178,8 @@ public class WaveManager : MonoBehaviour
         sequenceStarted = false;
 
         // Turn off water if desired
-        turnOnWater.TurnOff();
+        turnOnWaterP1.TurnOff();
+        turnOnWaterP2.TurnOff();
 
         // Extinguish all fires
         foreach (var largeFire in largeFirePoints)

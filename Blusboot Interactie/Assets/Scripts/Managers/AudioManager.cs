@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class AudioManager : MonoBehaviour
@@ -38,6 +39,7 @@ public class AudioManager : MonoBehaviour
 
     public AudioSource urgencySourceAlarm;
     public AudioSource urgencySourceFire;
+    public AudioSource rainOneShotSource;
 
     [Header("Volume Settings")]
     [Range(0f, 1f)] public float ambientVolume = 0.8f;
@@ -217,6 +219,10 @@ public class AudioManager : MonoBehaviour
             yield return null;
         }
         source.volume = endVol;
+    }
+    public void PlayRainOneShot()
+    {
+        rainOneShotSource?.Play();
     }
 
     public void PlayVoiceLine(AudioClip clip)
