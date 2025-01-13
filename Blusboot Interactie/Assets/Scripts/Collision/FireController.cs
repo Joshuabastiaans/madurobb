@@ -41,6 +41,7 @@ public class FireController : MonoBehaviour
     private float originalFireSpriteScale;
     public bool isFollower = false;
     private bool isFollowerActivated = false;
+    public bool isTrapSystemActive = false;
 
     // Class to hold particle system and its original emission rate
     private class ParticleSystemInfo
@@ -155,6 +156,7 @@ public class FireController : MonoBehaviour
         if (fireIntensity <= 0)
         {
             isExtinguished = true;
+            StartCoroutine(FadeOutAndStop(extinguishFireAudioSource, 3f));
             // Stop fire particles when extinguished
             foreach (var psi in particleSystemInfos)
             {
@@ -230,7 +232,11 @@ public class FireController : MonoBehaviour
         {
             fireSprite.SetActive(true);
         }
-
+        if (!isTrapSystemActive)
+        {
+            fireSprite.transform.localScale = Vector3.one * originalFireSpriteScale;
+            return;
+        }
         float normalizedIntensity = fireIntensity / maxFireIntensity;
 
         if (normalizedIntensity > 0.66f)
@@ -277,7 +283,24 @@ public class FireController : MonoBehaviour
         }
     }
 
+    public void StopWithFade()
+    {
+        StartCoroutine(FadeOutAndStop(extinguishFireAudioSource, 1f));
+    }
 
+    private IEnumerator FadeOutAndStop(AudioSource audioSource, float duration)
+    {
+        float startVolume = audioSource.volume;
+
+        while (audioSource.volume > 0)
+        {
+            audioSource.volume -= startVolume * Time.deltaTime / duration;
+            yield return null;
+        }
+
+        audioSource.Stop();
+        audioSource.volume = startVolume; // Reset the volume for future playback
+    }
     IEnumerator setExtinguishedDelayed()
     {
         yield return new WaitForSeconds(3f);

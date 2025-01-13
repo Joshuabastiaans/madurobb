@@ -34,7 +34,6 @@ public class WaterHitDetector : MonoBehaviour
             }
             waterSpray = other.GetComponent<ParticleSystem>();
             int numCollisionEvents = waterSpray.GetCollisionEvents(gameObject, collisionEvents);
-            print("WaterHitDetector: " + numCollisionEvents + " water particles hit the object with ID: " + playerID);
             if (fireController != null)
             {
                 // Use the number of collision events as the amount of water hitting the object

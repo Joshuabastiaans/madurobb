@@ -19,6 +19,7 @@ public class WaveManager : MonoBehaviour
     private bool isPlayerActive = false;
     private float inactivityTimer = 0f;
     private bool isExperienceActive = true;
+    public bool allFiresActiveBegin = false;
 
     // Crowd emotion tracking
     private AudioManager.Emotion currentEmotion = AudioManager.Emotion.Neutral;
@@ -61,12 +62,30 @@ public class WaveManager : MonoBehaviour
         isPlayerActive = false; // reset each frame
 
         // --- Optional debug keys ---
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.A))
         {
             StopExperience();     // If you want to restart from scratch
+            audioManager.SetVolume(0.2f);
+            audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
+            StartFireSequence();  // Start the new logic
+            audioManager?.StartPreWaveAudio();
+        }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            turnOnWaterP1.TurnOn();
+            turnOnWaterP2.TurnOn();
+            audioManager?.StartWaveAudio();
+        }
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            StopExperience();     // If you want to restart from scratch
+            audioManager.SetVolume(0.2f);
+            audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
             StartFireSequence();  // Start the new logic
             turnOnWaterP1.TurnOn();
             turnOnWaterP2.TurnOn();
+            audioManager?.StartWaveAudio();
+
         }
 
         if (Input.GetKeyDown(KeyCode.S))
@@ -97,7 +116,6 @@ public class WaveManager : MonoBehaviour
         {
             sequenceStarted = true;
             StartCoroutine(FireSequenceRoutine());
-            audioManager?.StartWaveAudio();
         }
         else
         {
@@ -112,6 +130,7 @@ public class WaveManager : MonoBehaviour
         middleFire.StartFire();
         bool middleFireExtinguished = false;
 
+        bool middleFireHalfway = false;
         // Subscribe to the extinguished event for the middle fire
         middleFire.OnFireExtinguished += (fireController, playerId) =>
         {
@@ -122,10 +141,18 @@ public class WaveManager : MonoBehaviour
 
         Debug.Log("Middle large fire ignited. Waiting for extinguish...");
 
-        // Wait until the middle fire is extinguished
-        while (!middleFireExtinguished)
+        // Check if allFiresActiveBegin is true
+        if (!allFiresActiveBegin)
         {
-            yield return null;
+            // Wait until the middle fire is extinguished
+            while (!middleFireHalfway)
+            {
+                if (middleFire.GetCurrentHealth() <= 50f)
+                {
+                    middleFireHalfway = true;
+                }
+                yield return null;
+            }
         }
 
         Debug.Log("Middle large fire extinguished!");

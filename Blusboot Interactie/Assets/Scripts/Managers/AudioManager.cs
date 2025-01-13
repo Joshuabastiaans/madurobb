@@ -40,6 +40,7 @@ public class AudioManager : MonoBehaviour
     public AudioSource urgencySourceAlarm;
     public AudioSource urgencySourceFire;
     public AudioSource rainOneShotSource;
+    public AudioSource aanjagerOneShotSource;
 
     [Header("Volume Settings")]
     [Range(0f, 1f)] public float ambientVolume = 0.8f;
@@ -174,6 +175,14 @@ public class AudioManager : MonoBehaviour
             }
         }
     }
+    /// <summary>
+    /// Called to start the pre-wave phase. Fire audio is triggered alongside existing ambient audio.
+    /// </summary>
+    public void StartPreWaveAudio(float fadeTime = 1f)
+    {
+        // Ensure the fire loop fades in
+        StartCoroutine(FadeVolume(urgencySourceFire, 0f, urgencyVolume, fadeTime));
+    }
 
     /// <summary>
     /// Called when a wave starts. Fade down ambient, fade up urgency.
@@ -231,6 +240,15 @@ public class AudioManager : MonoBehaviour
         {
             crowdOneShotSource.PlayOneShot(clip);
         }
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            aanjagerOneShotSource?.Play();
+        }
+
     }
 
 }
