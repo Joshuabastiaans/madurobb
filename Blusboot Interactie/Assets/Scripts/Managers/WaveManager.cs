@@ -128,16 +128,16 @@ public class WaveManager : MonoBehaviour
         // --- Step 1: Ignite only 1 large fire in the middle ---
         FireController middleFire = largeFirePoints[largeFirePoints.Count / 2];
         middleFire.StartFire();
-        bool middleFireExtinguished = false;
+        // bool middleFireExtinguished = false;
 
         bool middleFireHalfway = false;
         // Subscribe to the extinguished event for the middle fire
-        middleFire.OnFireExtinguished += (fireController, playerId) =>
-        {
-            middleFireExtinguished = true;
-            // Unsubscribe to avoid memory leaks
-            middleFire.OnFireExtinguished -= (fireController, playerId2) => { };
-        };
+        // middleFire.OnFireExtinguished += (fireController, playerId) =>
+        // {
+        //     middleFireExtinguished = true;
+        //     // Unsubscribe to avoid memory leaks
+        //     middleFire.OnFireExtinguished -= (fireController, playerId2) => { };
+        // };
 
         Debug.Log("Middle large fire ignited. Waiting for extinguish...");
 
