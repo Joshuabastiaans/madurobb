@@ -1,8 +1,9 @@
 using UnityEngine;
+using System;
 
 public class PotentiometerObjectController2P : MonoBehaviour
 {
-    private ArduinoConnector arduinoConnector;
+    public ArduinoConnector arduinoConnector;
 
     // --- Player 1 Pot Values ---
     private int potentiometerValue1 = 0; // Range: 0 to 1023
@@ -19,7 +20,7 @@ public class PotentiometerObjectController2P : MonoBehaviour
 
     [Header("Player 2 Target")]
     public Transform targetObjectP2; // Player 2's object to control
-
+    public event Action<int, int> OnAnyPotChanged;
     void Awake()
     {
         // Find the ArduinoConnector
@@ -45,25 +46,32 @@ public class PotentiometerObjectController2P : MonoBehaviour
     {
         potentiometerValue1 = value;
         UpdatePlayer1Rotation();
+
+        OnAnyPotChanged?.Invoke(1, value); // potIndex 1
     }
 
     void HandlePotentiometer2Changed(int value)
     {
         potentiometerValue2 = value;
         UpdatePlayer1Rotation();
+
+        OnAnyPotChanged?.Invoke(2, value); // potIndex 2
     }
 
-    // --- Player 2 Pot Updates ---
     void HandlePotentiometer3Changed(int value)
     {
         potentiometerValue3 = value;
         UpdatePlayer2Rotation();
+
+        OnAnyPotChanged?.Invoke(3, value); // potIndex 3
     }
 
     void HandlePotentiometer4Changed(int value)
     {
         potentiometerValue4 = value;
         UpdatePlayer2Rotation();
+
+        OnAnyPotChanged?.Invoke(4, value); // potIndex 4
     }
 
     // --- Apply Rotations to Each Player's Target ---

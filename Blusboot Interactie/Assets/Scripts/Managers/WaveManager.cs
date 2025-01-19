@@ -18,9 +18,9 @@ public class WaveManager : MonoBehaviour
     public float inactivityTimeout = 60f;
     private bool isPlayerActive = false;
     private float inactivityTimer = 0f;
-    private bool isExperienceActive = true;
+    public bool isExperienceActive = true;
     public bool allFiresActiveBegin = false;
-
+    public AutomaticExperienceStarter automaticExperienceStarter;
     // Crowd emotion tracking
     private AudioManager.Emotion currentEmotion = AudioManager.Emotion.Neutral;
 
@@ -51,8 +51,7 @@ public class WaveManager : MonoBehaviour
             inactivityTimer += Time.deltaTime;
             if (inactivityTimer >= inactivityTimeout && isExperienceActive)
             {
-                isExperienceActive = false;
-                StopExperience();
+                StopExperienceClean();
             }
         }
         else
@@ -85,13 +84,42 @@ public class WaveManager : MonoBehaviour
             turnOnWaterP1.TurnOn();
             turnOnWaterP2.TurnOn();
             audioManager?.StartWaveAudio();
-
         }
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            StopExperience();
+            StopExperienceClean();
         }
+
+        // if xbox controller a button is pressed
+        if (Input.GetButtonDown("Fire1"))
+        {
+            print("A button pressed");
+            StartAanjager();
+        }
+    }
+
+    public void StartExperience()
+    {
+        if (!isExperienceActive)
+        {
+            StopExperience();     // If you want to restart from scratch
+            audioManager.SetVolume(0.2f);
+            audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
+            StartFireSequence();  // Start the new logic
+            turnOnWaterP1.TurnOn();
+            turnOnWaterP2.TurnOn();
+            audioManager?.StartWaveAudio();
+        }
+        else
+        {
+            Debug.LogWarning("Fire sequence already started!");
+        }
+    }
+    public void TurnOnWaterPlayers()
+    {
+        turnOnWaterP1.TurnOn();
+        turnOnWaterP2.TurnOn();
     }
 
     /// <summary>
@@ -123,13 +151,22 @@ public class WaveManager : MonoBehaviour
         }
     }
 
+    public void StartAanjager()
+    {
+        StopExperience();     // If you want to restart from scratch
+        audioManager.SetVolume(0.2f);
+        audioManager.SetCrowdEmotion(AudioManager.Emotion.Neutral, 1f);
+        StartFireSequence();  // Start the new logic
+        audioManager?.StartPreWaveAudio();
+    }
+
     private IEnumerator FireSequenceRoutine()
     {
         // --- Step 1: Ignite only 1 large fire in the middle ---
         FireController middleFire = largeFirePoints[largeFirePoints.Count / 2];
         middleFire.StartFire();
         // bool middleFireExtinguished = false;
-
+        isExperienceActive = true;
         bool middleFireHalfway = false;
         // Subscribe to the extinguished event for the middle fire
         // middleFire.OnFireExtinguished += (fireController, playerId) =>
@@ -194,6 +231,8 @@ public class WaveManager : MonoBehaviour
         StartCoroutine(SetCrowdPositive());
         turnOnWaterP1.TurnOff();
         turnOnWaterP2.TurnOff();
+        automaticExperienceStarter.StartCooldown();
+        isExperienceActive = false;
     }
 
     /// <summary>
@@ -203,11 +242,12 @@ public class WaveManager : MonoBehaviour
     {
         StopAllCoroutines();
         sequenceStarted = false;
+        isExperienceActive = false;
 
         // Turn off water if desired
         turnOnWaterP1.TurnOff();
         turnOnWaterP2.TurnOff();
-
+        audioManager?.EndWaveAudio(1f);
         // Extinguish all fires
         foreach (var largeFire in largeFirePoints)
         {
@@ -222,6 +262,36 @@ public class WaveManager : MonoBehaviour
 
         Debug.Log("Experience stopped. Fires reset.");
     }
+
+
+    public void StopExperienceClean()
+    {
+        StopAllCoroutines();
+        sequenceStarted = false;
+        isExperienceActive = false;
+        automaticExperienceStarter.StartCooldown();
+
+        // Turn off water if desired
+        turnOnWaterP1.TurnOff();
+        turnOnWaterP2.TurnOff();
+        audioManager?.EndWaveAudio(1f);
+        // Extinguish all fires
+        foreach (var largeFire in largeFirePoints)
+        {
+            if (largeFire.isFireActive)
+                largeFire.StopFireImmediately(); // or however you extinguish forcibly
+        }
+        foreach (var smallFire in smallFirePoints)
+        {
+            if (smallFire.isFireActive)
+                smallFire.StopFireImmediately();
+        }
+
+        Debug.Log("Experience stopped. Fires reset.");
+    }
+
+
+
 
     /// <summary>
     /// Count how many from the list are still active (not extinguished).
