@@ -8144,27 +8144,17 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!1 &1339450491 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1043319023124688177, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
+--- !u!114 &1339450494 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6611559834546241377, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
   m_PrefabInstance: {fileID: 3940221449774288609}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1339450494
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1339450491}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 20459449d3088fd4ea624f132ec6d6ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  arduinoConnector: {fileID: 0}
-  waveManager: {fileID: 1620613314}
-  targetObjectP1: {fileID: 1773742313}
-  targetObjectP2: {fileID: 1209699329}
 --- !u!1 &1365406797
 GameObject:
   m_ObjectHideFlags: 0
@@ -15546,10 +15536,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5583120190545251168, guid: 8742d91ae3e68dc449de1a0b614a24ba, type: 3}
-      propertyPath: portName
-      value: COM3
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -15750,18 +15736,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: PotentiometerController
       objectReference: {fileID: 0}
-    - target: {fileID: 4612513819150663805, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4612513819150663805, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
+    - target: {fileID: 6611559834546241377, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
       propertyPath: waveManager
       value: 
       objectReference: {fileID: 1620613314}
-    - target: {fileID: 4612513819150663805, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
-      propertyPath: targetObject
+    - target: {fileID: 6611559834546241377, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
+      propertyPath: targetObjectP1
       value: 
       objectReference: {fileID: 1773742313}
+    - target: {fileID: 6611559834546241377, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
+      propertyPath: targetObjectP2
+      value: 
+      objectReference: {fileID: 1209699329}
     - target: {fileID: 8502369055959088899, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.5191371
@@ -15805,10 +15791,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1043319023124688177, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1339450494}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: edf9fb37b0ab1ad4ea62772a69be9d60, type: 3}
 --- !u!1001 &6715720678182955077
 PrefabInstance:
